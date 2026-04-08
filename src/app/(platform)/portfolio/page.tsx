@@ -7,7 +7,9 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, formatPercent } from "@/lib/utils";
+import { calculateAvailableBalance } from "@/lib/calculations/pro-rata";
 import Link from "next/link";
+import Decimal from "decimal.js";
 import { DollarSign, TrendingUp, Wallet, PieChart } from "lucide-react";
 
 export default async function PortfolioPage() {
@@ -20,32 +22,46 @@ export default async function PortfolioPage() {
     orderBy: { committedAt: "desc" },
   });
 
-  const totalInvested = syndications.reduce((s, i) => s + Number(i.amount), 0);
-  const totalDistributed = syndications.reduce((s, i) => s + Number(i.totalDistributed), 0);
-  const totalProfit = syndications.reduce((s, i) => s + Number(i.profitEarned), 0);
-  const principalReturned = syndications.reduce((s, i) => s + Number(i.principalReturned), 0);
-  const roi = totalInvested > 0 ? (totalProfit / totalInvested) * 100 : 0;
+  // Use Decimal for all money aggregations
+  const totalInvested = syndications.reduce(
+    (s, i) => s.plus(new Decimal(i.amount.toString())), new Decimal(0)
+  );
+  const totalDistributed = syndications.reduce(
+    (s, i) => s.plus(new Decimal(i.totalDistributed.toString())), new Decimal(0)
+  );
+  const totalProfit = syndications.reduce(
+    (s, i) => s.plus(new Decimal(i.profitEarned.toString())), new Decimal(0)
+  );
+  const principalReturned = syndications.reduce(
+    (s, i) => s.plus(new Decimal(i.principalReturned.toString())), new Decimal(0)
+  );
+  const roi = totalInvested.gt(0)
+    ? totalProfit.div(totalInvested).mul(100).toDecimalPlaces(2).toNumber()
+    : 0;
 
-  const completedPayouts = await prisma.payoutRequest.aggregate({
-    where: { userId: session.user.id, status: "COMPLETED" },
+  // Calculate available balance: totalDistributed - all payout holds (PENDING+APPROVED+PROCESSING+COMPLETED)
+  const payoutHolds = await prisma.payoutRequest.aggregate({
+    where: {
+      userId: session.user.id,
+      status: { in: ["PENDING", "APPROVED", "PROCESSING", "COMPLETED"] },
+    },
     _sum: { amount: true },
   });
-  const pendingPayouts = await prisma.payoutRequest.aggregate({
-    where: { userId: session.user.id, status: "PENDING" },
-    _sum: { amount: true },
-  });
-
-  const availableBalance = totalDistributed - Number(completedPayouts._sum.amount || 0) - Number(pendingPayouts._sum.amount || 0);
+  const totalPayoutHolds = new Decimal((payoutHolds._sum.amount || 0).toString());
+  const availableBalance = calculateAvailableBalance(
+    totalDistributed.toString(),
+    totalPayoutHolds.toString()
+  );
 
   return (
     <div>
       <PageHeader title="My Portfolio" description="Track your investments and returns" />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-        <StatCard title="Total Invested" value={formatCurrency(totalInvested)} icon={DollarSign} />
-        <StatCard title="Total Distributed" value={formatCurrency(totalDistributed)} icon={TrendingUp} trend={totalDistributed > 0 ? "up" : "neutral"} />
-        <StatCard title="Profit Earned" value={formatCurrency(totalProfit)} subtitle={`${roi.toFixed(1)}% ROI`} icon={PieChart} trend={totalProfit > 0 ? "up" : "neutral"} />
-        <StatCard title="Available Balance" value={formatCurrency(availableBalance)} subtitle="Available for payout" icon={Wallet} />
+        <StatCard title="Total Invested" value={formatCurrency(totalInvested.toNumber())} icon={DollarSign} />
+        <StatCard title="Total Distributed" value={formatCurrency(totalDistributed.toNumber())} icon={TrendingUp} trend={totalDistributed.gt(0) ? "up" : "neutral"} />
+        <StatCard title="Profit Earned" value={formatCurrency(totalProfit.toNumber())} subtitle={`${roi.toFixed(1)}% ROI`} icon={PieChart} trend={totalProfit.gt(0) ? "up" : "neutral"} />
+        <StatCard title="Available Balance" value={formatCurrency(availableBalance.toNumber())} subtitle="Available for payout" icon={Wallet} />
       </div>
 
       <Card>

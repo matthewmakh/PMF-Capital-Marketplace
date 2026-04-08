@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatPercent, formatDate } from "@/lib/utils";
 import { canInvest } from "@/lib/permissions";
+import { calculateBreakEven } from "@/lib/calculations/pro-rata";
 import { SyndicationForm } from "./syndication-form";
 import {
   DollarSign,
@@ -37,7 +38,7 @@ export default async function DealDetailPage({ params }: Props) {
       },
       payments: {
         orderBy: { paymentDate: "desc" },
-        take: 10,
+        take: 20,
       },
     },
   });
@@ -64,18 +65,13 @@ export default async function DealDetailPage({ params }: Props) {
     0
   );
 
-  // Break-even calculation
-  const avgPayment =
-    deal.payments.length > 0
-      ? deal.payments.reduce((s, p) => s + Number(p.amount), 0) /
-        deal.payments.length
-      : 0;
-  const remainingToBreakEven = Math.max(
-    Number(deal.fundedAmount) - Number(deal.totalCollected),
-    0
+  // Break-even calculation — exclude reversed payments
+  const nonReversedPayments = deal.payments.filter((p) => !p.isReversed);
+  const paymentsToBreakEven = calculateBreakEven(
+    deal.fundedAmount.toString(),
+    deal.totalCollected.toString(),
+    nonReversedPayments.map((p) => ({ amount: p.amount.toString() }))
   );
-  const paymentsToBreakEven =
-    avgPayment > 0 ? Math.ceil(remainingToBreakEven / avgPayment) : null;
 
   const showSyndicationForm =
     canInvest(session.user.role) &&

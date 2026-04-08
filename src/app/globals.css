@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+
+  /* Navy - Primary brand */
+  --color-navy-50: #f0f3f8;
+  --color-navy-100: #d9e1ed;
+  --color-navy-200: #b3c3db;
+  --color-navy-300: #8da5c9;
+  --color-navy-400: #6787b7;
+  --color-navy-500: #4169a5;
+  --color-navy-600: #345484;
+  --color-navy-700: #273f63;
+  --color-navy-800: #1a2a42;
+  --color-navy-900: #0d1521;
+  --color-navy-950: #060a10;
+
+  /* Steel - Secondary neutral */
+  --color-steel-50: #f4f6f8;
+  --color-steel-100: #e3e8ed;
+  --color-steel-200: #c7d1db;
+  --color-steel-300: #a8b5c4;
+  --color-steel-400: #8a9ab0;
+  --color-steel-500: #6d7f9b;
+  --color-steel-600: #56667d;
+  --color-steel-700: #414d5f;
+  --color-steel-800: #2c3440;
+  --color-steel-900: #171b21;
+
+  /* Semantic colors */
+  --color-profit: #16a34a;
+  --color-profit-light: #dcfce7;
+  --color-warning: #d97706;
+  --color-warning-light: #fef3c7;
+  --color-danger: #dc2626;
+  --color-danger-light: #fee2e2;
+
+  /* shadcn/ui CSS variables */
+  --color-background: #ffffff;
+  --color-foreground: #0d1521;
+  --color-card: #ffffff;
+  --color-card-foreground: #0d1521;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #0d1521;
+  --color-primary: #273f63;
+  --color-primary-foreground: #f0f3f8;
+  --color-secondary: #f4f6f8;
+  --color-secondary-foreground: #171b21;
+  --color-muted: #f4f6f8;
+  --color-muted-foreground: #6d7f9b;
+  --color-accent: #f0f3f8;
+  --color-accent-foreground: #0d1521;
+  --color-destructive: #dc2626;
+  --color-destructive-foreground: #ffffff;
+  --color-border: #e3e8ed;
+  --color-input: #e3e8ed;
+  --color-ring: #4169a5;
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+
+  /* Sidebar */
+  --color-sidebar: #0d1521;
+  --color-sidebar-foreground: #d9e1ed;
+  --color-sidebar-primary: #4169a5;
+  --color-sidebar-primary-foreground: #ffffff;
+  --color-sidebar-accent: #1a2a42;
+  --color-sidebar-accent-foreground: #d9e1ed;
+  --color-sidebar-border: #1a2a42;
+  --color-sidebar-ring: #4169a5;
+
+  /* Chart colors */
+  --color-chart-1: #273f63;
+  --color-chart-2: #4169a5;
+  --color-chart-3: #6787b7;
+  --color-chart-4: #16a34a;
+  --color-chart-5: #d97706;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Tabular numbers for financial data */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}

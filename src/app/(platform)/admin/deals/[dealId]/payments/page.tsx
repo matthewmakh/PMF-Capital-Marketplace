@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 interface Payment {
   id: string;
@@ -114,6 +116,22 @@ export default function AdminPaymentsPage() {
 
   return (
     <div>
+      <div className="mb-4 flex items-center gap-4">
+        <Link
+          href={`/deals/${dealId}`}
+          className="inline-flex items-center gap-1.5 text-sm text-steel-500 hover:text-navy-700 transition-colors"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Back to Deal
+        </Link>
+        <span className="text-steel-300">|</span>
+        <Link
+          href="/admin/deals"
+          className="text-sm text-steel-500 hover:text-navy-700 transition-colors"
+        >
+          Manage Deals
+        </Link>
+      </div>
       <PageHeader
         title="Post Payment"
         description="Record a merchant payment and distribute to investors"

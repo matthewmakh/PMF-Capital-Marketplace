@@ -3,6 +3,16 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isAdmin } from "@/lib/permissions";
 import { logAction } from "@/lib/audit";
+import { PayoutStatus } from "@prisma/client";
+
+// Valid status transitions — enforced in code, not just UI
+const VALID_TRANSITIONS: Record<PayoutStatus, PayoutStatus[]> = {
+  PENDING: ["APPROVED", "DENIED"],
+  APPROVED: ["PROCESSING", "COMPLETED", "DENIED"],
+  PROCESSING: ["COMPLETED"],
+  COMPLETED: [],
+  DENIED: [],
+};
 
 export async function PATCH(
   req: Request,
@@ -17,83 +27,92 @@ export async function PATCH(
   const body = await req.json();
   const { action, denialReason } = body;
 
-  const payout = await prisma.payoutRequest.findUnique({
-    where: { id: payoutId },
-  });
+  const statusMap: Record<string, PayoutStatus> = {
+    approve: "APPROVED",
+    deny: "DENIED",
+    complete: "COMPLETED",
+    process: "PROCESSING",
+  };
 
-  if (!payout) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const targetStatus = statusMap[action];
+  if (!targetStatus) {
+    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   }
 
-  if (payout.status !== "PENDING") {
-    return NextResponse.json(
-      { error: "Payout is not pending" },
-      { status: 400 }
-    );
-  }
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      // Read inside transaction for atomicity — prevents TOCTOU races
+      const payout = await tx.payoutRequest.findUnique({
+        where: { id: payoutId },
+      });
 
-  if (action === "approve") {
-    const updated = await prisma.payoutRequest.update({
-      where: { id: payoutId },
-      data: {
-        status: "APPROVED",
-        approvedById: session.user.id,
-        approvedAt: new Date(),
-      },
+      if (!payout) throw new Error("Payout not found");
+
+      // Validate status transition
+      const allowed = VALID_TRANSITIONS[payout.status];
+      if (!allowed.includes(targetStatus)) {
+        throw new Error(
+          `Cannot transition from ${payout.status} to ${targetStatus}. ` +
+            `Allowed: ${allowed.length > 0 ? allowed.join(", ") : "none (terminal state)"}`
+        );
+      }
+
+      // For denial, require a reason
+      if (targetStatus === "DENIED" && !denialReason?.trim()) {
+        throw new Error("Denial reason is required");
+      }
+
+      // Build update data
+      const updateData: Record<string, unknown> = {
+        status: targetStatus,
+      };
+
+      if (targetStatus === "APPROVED") {
+        updateData.approvedById = session.user.id;
+        updateData.approvedAt = new Date();
+      } else if (targetStatus === "DENIED") {
+        updateData.approvedById = session.user.id;
+        updateData.deniedAt = new Date();
+        updateData.denialReason = denialReason;
+      } else if (targetStatus === "PROCESSING") {
+        updateData.processedAt = new Date();
+      } else if (targetStatus === "COMPLETED") {
+        updateData.completedAt = new Date();
+        if (!payout.processedAt) {
+          updateData.processedAt = new Date();
+        }
+      }
+
+      const updated = await tx.payoutRequest.update({
+        where: { id: payoutId },
+        data: updateData,
+      });
+
+      return { updated, previousStatus: payout.status };
     });
 
     await logAction({
-      action: "PAYOUT_APPROVED",
+      action:
+        targetStatus === "APPROVED"
+          ? "PAYOUT_APPROVED"
+          : targetStatus === "DENIED"
+            ? "PAYOUT_DENIED"
+            : "PAYOUT_COMPLETED",
       actorId: session.user.id,
       resourceType: "payout",
       resourceId: payoutId,
-      metadata: { amount: Number(payout.amount) },
-    });
-
-    return NextResponse.json(updated);
-  }
-
-  if (action === "deny") {
-    const updated = await prisma.payoutRequest.update({
-      where: { id: payoutId },
-      data: {
-        status: "DENIED",
-        approvedById: session.user.id,
-        deniedAt: new Date(),
-        denialReason,
+      metadata: {
+        amount: Number(result.updated.amount),
+        previousStatus: result.previousStatus,
+        newStatus: targetStatus,
+        ...(denialReason ? { reason: denialReason } : {}),
       },
     });
 
-    await logAction({
-      action: "PAYOUT_DENIED",
-      actorId: session.user.id,
-      resourceType: "payout",
-      resourceId: payoutId,
-      metadata: { amount: Number(payout.amount), reason: denialReason },
-    });
-
-    return NextResponse.json(updated);
+    return NextResponse.json(result.updated);
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Failed to update payout";
+    return NextResponse.json({ error: message }, { status: 400 });
   }
-
-  if (action === "complete") {
-    const updated = await prisma.payoutRequest.update({
-      where: { id: payoutId },
-      data: {
-        status: "COMPLETED",
-        completedAt: new Date(),
-      },
-    });
-
-    await logAction({
-      action: "PAYOUT_COMPLETED",
-      actorId: session.user.id,
-      resourceType: "payout",
-      resourceId: payoutId,
-      metadata: { amount: Number(payout.amount) },
-    });
-
-    return NextResponse.json(updated);
-  }
-
-  return NextResponse.json({ error: "Invalid action" }, { status: 400 });
 }

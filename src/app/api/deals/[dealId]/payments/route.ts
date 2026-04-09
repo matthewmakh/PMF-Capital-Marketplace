@@ -11,6 +11,7 @@ const paymentSchema = z.object({
   amount: z.number().positive("Payment amount must be positive"),
   paymentDate: z.string().refine((d) => !isNaN(Date.parse(d)), "Invalid date"),
   memo: z.string().optional(),
+  idempotencyKey: z.string().optional(),
 });
 
 export async function GET(
@@ -55,10 +56,28 @@ export async function POST(
     );
   }
 
-  const { amount, paymentDate, memo } = parsed.data;
+  const { amount, paymentDate, memo, idempotencyKey } = parsed.data;
 
   try {
+    // Idempotency check: if this key was already used, return the existing payment
+    if (idempotencyKey) {
+      const existing = await prisma.payment.findUnique({
+        where: { idempotencyKey },
+      });
+      if (existing) {
+        return NextResponse.json(existing, { status: 200 });
+      }
+    }
+
     const result = await prisma.$transaction(async (tx) => {
+      // Double-check idempotency inside transaction (race condition window)
+      if (idempotencyKey) {
+        const existing = await tx.payment.findUnique({
+          where: { idempotencyKey },
+        });
+        if (existing) return { payment: existing, duplicate: true, beforeCollected: "", afterCollected: "" };
+      }
+
       const deal = await tx.deal.findUnique({ where: { id: dealId } });
       if (!deal) throw new Error("Deal not found");
 
@@ -97,6 +116,7 @@ export async function POST(
           paymentDate: new Date(paymentDate),
           paymentNumber,
           memo,
+          idempotencyKey: idempotencyKey || undefined,
           postedById: session.user.id,
         },
       });
@@ -134,8 +154,13 @@ export async function POST(
 
       await tx.deal.update({ where: { id: dealId }, data: updateData });
 
-      return { payment, beforeCollected, afterCollected: newCollected.toString() };
+      return { payment, duplicate: false, beforeCollected, afterCollected: newCollected.toString() };
     });
+
+    // If this was a duplicate caught inside the transaction, return existing
+    if (result.duplicate) {
+      return NextResponse.json(result.payment, { status: 200 });
+    }
 
     // Audit with before/after state
     await logAction({

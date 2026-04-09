@@ -204,6 +204,7 @@ model Payment {
   paymentDate    DateTime
   paymentNumber  Int
   memo           String?
+  idempotencyKey String?  @unique  // Prevents duplicate submissions
 
   postedById     String
   postedBy       User     @relation("PaymentPoster", fields: [postedById], references: [id])

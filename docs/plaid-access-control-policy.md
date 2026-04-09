@@ -1,10 +1,12 @@
-# Plaid Access Control & Data Privacy Policy
+# Access Control Policy
 ## Tyeny LLC — PMF Capital Marketplace Application
 
 **Document Version:** 1.0
 **Effective Date:** April 9, 2026
-**Prepared by:** Tyeny LLC
-**Application Name:** PMF Capital Marketplace
+**Last Reviewed:** April 9, 2026
+**Next Scheduled Review:** October 9, 2026
+**Policy Owner:** Matt Makharadze, Tyeny LLC
+**Application:** PMF Capital Marketplace
 **Application URL:** https://pmf-capital-marketplace-production.up.railway.app
 
 ---
@@ -15,217 +17,150 @@
 **Application Name:** PMF Capital Marketplace (the "Application")
 **Nature of Business:** Internal merchant cash advance (MCA) syndication and portfolio management platform for Premier Merchant Funding (PMF).
 
-The Application enables approved internal employees ("Users") of PMF to participate in MCA deal syndication, track repayment performance, and request payouts from earned returns. Plaid is used exclusively to allow Users to link their personal bank accounts for the purpose of receiving payout disbursements.
+The Application enables approved internal users of PMF to participate in MCA deal syndication, track repayment performance, manage payouts, and link bank accounts for disbursement processing. Third-party integrations are used where appropriate to facilitate account verification and payment operations.
 
 ---
 
-## 2. Plaid Products Requested
+## 2. Data Handling Principles
 
-| Product | Purpose | Justification |
-|---------|---------|---------------|
-| **Auth** | Retrieve account and routing numbers for ACH payout disbursements | Required to process approved payout transfers to Users' verified bank accounts |
-| **Identity** | Verify account ownership (name matching) | Ensures the linked bank account belongs to the authenticated User, preventing misdirected payouts |
+The Company follows these core principles when handling user and financial data:
 
-**Products NOT requested:** Transactions, Balance, Investments, Liabilities, Assets, Income, Employment, Transfer, Payment Initiation, Standing Orders, Signal.
-
----
-
-## 3. Data Collection Scope
-
-### 3.1 Data Collected via Plaid
-
-| Data Element | Source Product | Stored? | Storage Location |
-|-------------|---------------|---------|-----------------|
-| Account holder name | Identity | No (used for verification only) | Not persisted |
-| Account number | Auth | Yes (encrypted) | PostgreSQL — `bank_accounts` table |
-| Routing number | Auth | Yes (encrypted) | PostgreSQL — `bank_accounts` table |
-| Account mask (last 4 digits) | Auth | Yes (plaintext) | PostgreSQL — `bank_accounts` table |
-| Account type (checking/savings) | Auth | Yes (plaintext) | PostgreSQL — `bank_accounts` table |
-| Institution name | Auth | Yes (plaintext) | PostgreSQL — `bank_accounts` table |
-| Plaid access_token | Plaid Link | Yes (encrypted) | PostgreSQL — `bank_accounts` table |
-| Plaid account_id | Plaid Link | Yes (plaintext) | PostgreSQL — `bank_accounts` table |
-| Plaid item_id | Plaid Link | Yes (plaintext) | PostgreSQL — `bank_accounts` table |
-
-### 3.2 Data NOT Collected
-
-- Transaction history
-- Account balances
-- Investment holdings
-- Credit/loan information
-- Income or employment data
-- Social Security numbers
-- Date of birth
+1. **Purpose limitation** — Data obtained through third-party integrations is used to support the Application's core business functions.
+2. **Data minimization** — The Application requests only the data necessary to fulfill its operational requirements.
+3. **Encryption** — Sensitive credentials and financial data are encrypted at rest using AES-256-GCM with an application-level encryption key.
+4. **Server-side processing** — All third-party API interactions occur server-side. Credentials, tokens, and sensitive data are never exposed to the frontend client.
+5. **Consent** — Users provide explicit consent before any third-party account linking is initiated.
+6. **Auditability** — All material data operations are recorded in an immutable audit log.
 
 ---
 
-## 4. Data Usage
+## 3. Data Storage & Encryption
 
-### 4.1 Permitted Uses
+### 3.1 Encryption at Rest
 
-All data obtained through Plaid is used exclusively for the following purposes:
+Sensitive data elements — including third-party access tokens, account credentials, and routing information — are encrypted at rest using AES-256-GCM. The encryption key is stored as an environment variable on the hosting platform and is never committed to source code or version control.
 
-1. **Bank account verification** — Confirming the User's linked account is valid and belongs to them before processing payout requests.
-2. **Payout disbursement** — Using verified account and routing numbers to process approved ACH transfers of earned syndication returns.
-3. **Account display** — Showing the User their linked account information (institution name, account type, last 4 digits) within the Application's settings page.
+### 3.2 Encryption in Transit
 
-### 4.2 Prohibited Uses
+All communication between the Application and third-party APIs occurs over TLS 1.2+. The Application is served exclusively over HTTPS.
 
-Plaid data will NOT be used for:
+### 3.3 Database Security
 
-- Marketing, advertising, or lead generation
-- Creditworthiness assessment or underwriting
-- Selling, renting, or sharing with third parties
-- Profiling, scoring, or behavioral analysis
-- Any purpose beyond payout processing and account verification
+- **Hosting:** Managed PostgreSQL with provider-level encryption at rest
+- **Credentials:** Database connection strings stored as environment variables, not in source code
+- **Network:** Database accessible only from the Application's private network
 
 ---
 
-## 5. Data Storage & Encryption
+## 4. Access Control
 
-### 5.1 Encryption at Rest
+### 4.1 Application Roles
 
-| Data Element | Encryption Method |
-|-------------|-------------------|
-| Plaid `access_token` | AES-256-GCM with application-level encryption key |
-| Account number | AES-256-GCM with application-level encryption key |
-| Routing number | AES-256-GCM with application-level encryption key |
+The Application enforces role-based access control. Users are assigned roles that determine their permissions:
 
-The encryption key is stored as an environment variable (`ENCRYPTION_KEY`) on the hosting platform (Railway), never committed to source code or version control.
+| Capability | Standard Users | Administrative Users |
+|-----------|---------------|---------------------|
+| Link personal bank accounts | Yes (own account only) | Yes (own account only) |
+| View own linked account information | Yes | Yes |
+| View other users' linked accounts | No | No |
+| Approve payout disbursements | No | Yes |
+| Manage user accounts | No | Authorized admins only |
+| View audit logs | No | Yes |
 
-### 5.2 Encryption in Transit
+### 4.2 Credential & Token Access
 
-All communication between the Application and Plaid's API occurs over TLS 1.2+. The Application is served exclusively over HTTPS.
+| Credential Type | Access Level |
+|----------------|-------------|
+| Third-party API keys | Application server only (environment variable) |
+| Encryption keys | Application server only (environment variable) |
+| User-specific access tokens | Application server only (encrypted in database) |
+| Database credentials | Application server only (environment variable) |
 
-### 5.3 Database Security
+No API keys, access tokens, or encryption keys are exposed to the frontend client or logged in plaintext.
 
-- **Hosting:** Railway managed PostgreSQL (encrypted at rest by the provider)
-- **Access:** Database credentials are stored as environment variables, not in source code
-- **Network:** Database is accessible only from the Application's Railway private network
+### 4.3 Personnel Access
 
----
-
-## 6. Access Control
-
-### 6.1 Application Roles
-
-| Role | Can Link Bank Account | Can View Bank Data | Can Process Payouts |
-|------|----------------------|-------------------|-------------------|
-| Syndicate Rep | Yes (own account only) | Yes (own account only) | No (requests only) |
-| Admin | No | No | Yes (approves payout requests) |
-| Super Admin | No | No | Yes (approves payout requests) |
-
-### 6.2 Plaid Credential Access
-
-| Credential | Who Can Access |
-|-----------|---------------|
-| `PLAID_CLIENT_ID` | Application server only (environment variable) |
-| `PLAID_SECRET` | Application server only (environment variable) |
-| `ENCRYPTION_KEY` | Application server only (environment variable) |
-| User `access_token` | Application server only (encrypted in database) |
-
-No Plaid credentials or user access tokens are exposed to the frontend client. All Plaid API calls are made server-side via Next.js API routes.
-
-### 6.3 Personnel Access
-
-- Only authorized developers at Tyeny LLC have access to production environment variables.
-- Production database access is restricted to the Railway project owner.
-- No Plaid credentials are stored in source code, git history, or CI/CD logs.
+- Access to production environment variables is restricted to authorized personnel at Tyeny LLC.
+- Production database access is limited to the project owner.
+- Credentials are not stored in source code, git history, or CI/CD logs.
 
 ---
 
-## 7. Data Retention & Deletion
+## 5. Third-Party Integration Controls
 
-### 7.1 Retention Policy
+Data obtained through third-party integrations (such as bank account linking and verification services) is subject to the following controls:
 
-| Data Element | Retention Period |
-|-------------|-----------------|
-| Plaid `access_token` | Until User unlinks the account or account is deactivated |
-| Account/routing numbers | Until User unlinks the account or account is deactivated |
-| Account display info (mask, type, institution) | Until User unlinks the account or account is deactivated |
-| Plaid Link session data | Not stored beyond the token exchange |
-
-### 7.2 Deletion Process
-
-When a User unlinks a bank account:
-
-1. The Application calls Plaid's `/item/remove` endpoint to revoke the access token on Plaid's side.
-2. The corresponding `bank_accounts` record is soft-deleted (marked `isActive: false`) or hard-deleted.
-3. Encrypted fields (access_token, account number, routing number) are overwritten with null values.
-4. The deletion is logged in the audit trail.
-
-When a User account is deactivated:
-
-1. All linked bank accounts follow the same deletion process above.
-2. The User's Plaid Items are removed.
-
-### 7.3 User Data Requests
-
-Users may request:
-- A copy of all stored bank account data (display fields only; encrypted fields are not provided in plaintext)
-- Deletion of all linked bank accounts
-- These requests are handled by platform administrators within 30 days.
+- **Token lifecycle:** Access tokens are encrypted at rest immediately upon receipt. When a user unlinks an account, the token is revoked on the provider's side and the encrypted value is cleared from the database.
+- **No caching:** Third-party API responses are not cached in any intermediate storage layer (Redis, local files, CDN).
+- **No client exposure:** All third-party API calls are made server-side. No tokens, credentials, or raw API responses are sent to the browser.
+- **Provider policies:** Data obtained through third-party integrations is handled in accordance with the respective provider's developer policies and the user's consent at the time of linking.
 
 ---
 
-## 8. Incident Response
+## 6. Data Retention & Deletion
 
-### 8.1 Breach Notification
+Detailed retention schedules and deletion procedures are defined in the Company's Data Deletion & Retention Policy. Key points:
 
-In the event of a data breach involving Plaid-sourced data:
+- **Sensitive integration data** (tokens, account credentials) is deleted immediately when the associated link is removed by the user or upon account deactivation.
+- **Financial transaction records** are retained for 7 years in accordance with IRS record-keeping requirements.
+- **User PII** is retained for 1 year post-deactivation, then anonymized.
+- **Audit logs** are retained for 7 years and are append-only.
 
-1. Plaid will be notified within 72 hours via security@plaid.com.
-2. Affected Users will be notified within 72 hours.
-3. Compromised access tokens will be revoked via Plaid's `/item/remove` endpoint.
+When a user unlinks an account:
+1. The third-party provider is notified to revoke access.
+2. Encrypted credentials are cleared from the database.
+3. The action is recorded in the audit log.
+
+---
+
+## 7. Incident Response
+
+In the event of a security incident involving user data or third-party integration data:
+
+1. Affected third-party providers will be notified within 72 hours.
+2. Affected users will be notified within 72 hours.
+3. Compromised access tokens will be revoked immediately via the provider's API.
 4. The encryption key will be rotated and all stored tokens re-encrypted.
-
-### 8.2 Logging & Monitoring
-
-All Plaid-related actions are recorded in the Application's immutable audit log:
-
-- Bank account linked (actor, timestamp, institution name)
-- Bank account removed (actor, timestamp)
-- Payout request created (actor, amount, target account)
-- Payout approved/denied (actor, amount, reason)
+5. The incident will be documented in the audit log with full details.
 
 ---
 
-## 9. Third-Party Sharing
+## 8. Logging & Monitoring
 
-Plaid-sourced data is **never shared** with any third party. The data flows exclusively:
+All material actions related to account linking, data access, and financial operations are recorded in the Application's immutable audit log, including:
 
-```
-User's Bank ←→ Plaid ←→ PMF Capital Marketplace (server-side only)
-```
+- Account linking and unlinking events
+- Payout requests, approvals, and disbursements
+- User authentication events
+- Administrative actions (user management, deal management, status changes)
 
-No data is sent to analytics services, advertising platforms, data brokers, or any entity other than Plaid itself.
-
----
-
-## 10. Compliance
-
-### 10.1 Regulatory Framework
-
-- The Application is designed for internal use by employees of Premier Merchant Funding.
-- The Application does not provide consumer financial services to the general public.
-- Data handling follows Plaid's developer policy requirements.
-
-### 10.2 Plaid Developer Policy Adherence
-
-- End-user data is used only for the purposes described in this policy.
-- Users provide explicit consent before linking their bank account via Plaid Link.
-- Users can unlink their bank account at any time from the Application's settings page.
-- Plaid's `access_token` is never exposed to the client or logged in plaintext.
+Each log entry records the actor, timestamp, action type, affected resource, and relevant metadata.
 
 ---
 
-## 11. Contact Information
+## 9. Policy Review
 
-**Data Protection Contact:**
-- **Company:** Tyeny LLC
-- **Email:** matt@tyeny.com
-- **Application:** PMF Capital Marketplace
-- **URL:** https://pmf-capital-marketplace-production.up.railway.app
+| Review Activity | Frequency |
+|----------------|-----------|
+| Full policy review | Semi-annually |
+| Access control audit | Annually |
+| Third-party integration review | As needed upon provider policy updates |
+| Incident response procedure review | Annually |
+
+### Review Log
+
+| Date | Reviewer | Summary |
+|------|----------|---------|
+| April 9, 2026 | Matt Makharadze | Initial policy creation |
 
 ---
 
-*This document will be reviewed and updated at least annually or whenever material changes are made to the Application's data handling practices.*
+## 10. Contact
+
+**Policy Owner:** Matt Makharadze
+**Company:** Tyeny LLC
+**Email:** matt@tyeny.com
+
+---
+
+*This policy is reviewed and updated on a semi-annual basis, or as needed when material changes occur. All revisions are recorded in the Review Log.*

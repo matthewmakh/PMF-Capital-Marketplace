@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatCurrency, formatPercent } from "@/lib/utils";
+import { formatCurrency, formatPercent, formatDate } from "@/lib/utils";
 import Link from "next/link";
 import { DealStatus } from "@prisma/client";
 import {
@@ -15,6 +15,11 @@ import {
   Users,
   ArrowRight,
   CircleDollarSign,
+  AlertTriangle,
+  CheckCircle2,
+  Briefcase,
+  DollarSign,
+  BarChart3,
 } from "lucide-react";
 
 export default async function DealsPage() {
@@ -30,6 +35,7 @@ export default async function DealsPage() {
           DealStatus.FULLY_ALLOCATED,
           DealStatus.FUNDED,
           DealStatus.PAID_OFF,
+          DealStatus.DELINQUENT,
         ],
       },
     },
@@ -46,6 +52,12 @@ export default async function DealsPage() {
     (d) => d.status !== DealStatus.OPEN_FOR_SYNDICATION
   );
 
+  // Summary stats
+  const totalCapital = deals.reduce((s, d) => s + Number(d.fundedAmount), 0);
+  const totalCollected = deals.reduce((s, d) => s + Number(d.totalCollected), 0);
+  const activeDealCount = deals.filter((d) => d.status === "ACTIVE_REPAYING").length;
+  const delinquentCount = deals.filter((d) => d.status === "DELINQUENT").length;
+
   return (
     <div>
       <PageHeader
@@ -53,6 +65,35 @@ export default async function DealsPage() {
         description="Browse and invest in active MCA deals"
       />
 
+      {/* Summary bar */}
+      <Card className="mb-6">
+        <CardContent className="p-0">
+          <div className="grid grid-cols-2 divide-x divide-border/40 sm:grid-cols-4">
+            {[
+              { label: "Total Deals", value: String(deals.length), icon: Briefcase, color: "text-navy-900" },
+              { label: "Open for Investment", value: String(openDeals.length), icon: CircleDollarSign, color: "text-navy-600" },
+              { label: "Active Repaying", value: String(activeDealCount), icon: TrendingUp, color: "text-profit" },
+              { label: "Total Capital", value: formatCurrency(totalCapital), icon: DollarSign, color: "text-navy-900" },
+            ].map((item) => (
+              <div key={item.label} className="flex items-center gap-3 px-4 py-3.5 sm:px-5">
+                <div className="hidden sm:flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-steel-50">
+                  <item.icon className="h-4 w-4 text-steel-400" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-medium uppercase tracking-wider text-steel-400">
+                    {item.label}
+                  </p>
+                  <p className={`text-base font-bold tabular-nums ${item.color} sm:text-lg`}>
+                    {item.value}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Open for Syndication */}
       {openDeals.length > 0 && (
         <section className="mb-8">
           <div className="mb-4 flex items-center gap-2">
@@ -68,121 +109,115 @@ export default async function DealsPage() {
           </div>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {openDeals.map((deal) => {
-              const totalSyndicated =
-                Number(deal.fundedAmount) - Number(deal.syndicationOpen);
-              const percentFilled =
-                (totalSyndicated / Number(deal.fundedAmount)) * 100;
-              const returnRate = (
-                ((Number(deal.paybackAmount) - Number(deal.fundedAmount)) /
-                  Number(deal.fundedAmount)) *
-                100
-              ).toFixed(1);
+              const fundedAmt = Number(deal.fundedAmount);
+              const paybackAmt = Number(deal.paybackAmount);
+              const totalSyndicated = fundedAmt - Number(deal.syndicationOpen);
+              const percentFilled = (totalSyndicated / fundedAmt) * 100;
+              const returnRate = (((paybackAmt - fundedAmt) / fundedAmt) * 100).toFixed(1);
+              const paybackFormatted = formatCurrency(paybackAmt);
 
               return (
                 <Link key={deal.id} href={`/deals/${deal.id}`}>
                   <Card className="group h-full border-border/60 transition-all hover:border-navy-300 hover:shadow-lg">
                     <CardContent className="p-0">
                       {/* Header */}
-                      <div className="border-b border-border/40 bg-steel-50/50 px-5 py-4">
+                      <div className="border-b border-border/40 bg-gradient-to-r from-navy-50/60 to-steel-50/30 px-5 py-4">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <h3 className="truncate text-base font-semibold text-navy-900">
+                            <h3 className="truncate text-base font-bold text-navy-900">
                               {deal.merchantName}
                             </h3>
-                            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-steel-500">
+                            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-steel-500">
                               {deal.merchantIndustry && (
-                                <span className="flex items-center gap-1">
+                                <span className="flex items-center gap-1 rounded-full bg-white/60 px-2 py-0.5">
                                   <TrendingUp className="h-3 w-3" />
                                   {deal.merchantIndustry}
                                 </span>
                               )}
                               {deal.merchantState && (
-                                <span className="flex items-center gap-1">
+                                <span className="flex items-center gap-1 rounded-full bg-white/60 px-2 py-0.5">
                                   <MapPin className="h-3 w-3" />
                                   {deal.merchantState}
                                 </span>
                               )}
                               {deal.termDays && (
-                                <span className="flex items-center gap-1">
+                                <span className="flex items-center gap-1 rounded-full bg-white/60 px-2 py-0.5">
                                   <Clock className="h-3 w-3" />
-                                  {deal.termDays} days
+                                  {deal.termDays}d
                                 </span>
                               )}
                             </div>
                           </div>
-                          <span className="shrink-0 rounded-md bg-profit/10 px-2 py-1 text-xs font-semibold text-profit">
-                            {returnRate}% return
+                          <span className="shrink-0 rounded-lg bg-profit/10 px-2.5 py-1.5 text-xs font-bold text-profit">
+                            {returnRate}%
+                            <span className="block text-[10px] font-medium text-profit/70">return</span>
                           </span>
                         </div>
                       </div>
 
                       {/* Financials */}
                       <div className="px-5 py-4">
-                        <div className="grid grid-cols-3 gap-4 text-center">
-                          <div>
-                            <p className="text-[11px] font-medium uppercase tracking-wide text-steel-400">
-                              Amount
-                            </p>
-                            <p className="mt-0.5 text-sm font-bold tabular-nums text-navy-900">
-                              {formatCurrency(Number(deal.fundedAmount))}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-[11px] font-medium uppercase tracking-wide text-steel-400">
-                              Factor
-                            </p>
-                            <p className="mt-0.5 text-sm font-bold tabular-nums text-navy-900">
-                              {Number(deal.factorRate).toFixed(2)}x
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-[11px] font-medium uppercase tracking-wide text-steel-400">
-                              Min
-                            </p>
-                            <p className="mt-0.5 text-sm font-bold tabular-nums text-navy-900">
-                              {formatCurrency(Number(deal.syndicationMin))}
-                            </p>
-                          </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          {[
+                            { label: "Funding", value: formatCurrency(fundedAmt) },
+                            { label: "Factor", value: `${Number(deal.factorRate).toFixed(2)}x` },
+                            { label: "Payback", value: paybackFormatted },
+                          ].map((item) => (
+                            <div key={item.label} className="rounded-lg bg-steel-50/70 px-3 py-2 text-center">
+                              <p className="text-[10px] font-semibold uppercase tracking-wider text-steel-400">
+                                {item.label}
+                              </p>
+                              <p className="mt-0.5 text-sm font-bold tabular-nums text-navy-900">
+                                {item.value}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-3 flex items-center justify-between rounded-lg border border-dashed border-navy-200 bg-navy-50/30 px-3 py-2">
+                          <span className="text-xs text-steel-500">Min Investment</span>
+                          <span className="text-sm font-bold tabular-nums text-navy-700">
+                            {formatCurrency(Number(deal.syndicationMin))}
+                          </span>
                         </div>
                       </div>
 
                       {/* Progress */}
-                      <div className="border-t border-border/40 px-5 py-3">
-                        <div className="flex items-center justify-between text-xs">
+                      <div className="border-t border-border/40 px-5 py-3.5">
+                        <div className="flex items-center justify-between text-xs mb-2">
                           <div className="flex items-center gap-1.5 text-steel-500">
                             <Users className="h-3 w-3" />
                             {deal._count.syndications} investor{deal._count.syndications !== 1 ? "s" : ""}
                           </div>
-                          <span className="font-semibold tabular-nums text-navy-700">
+                          <span className={`font-bold tabular-nums ${percentFilled >= 90 ? "text-profit" : "text-navy-700"}`}>
                             {formatPercent(percentFilled, 0)} filled
                           </span>
                         </div>
                         <Progress
                           value={percentFilled}
-                          className="mt-2 h-1.5"
+                          className="h-2 rounded-full"
                           indicatorClassName={
                             percentFilled >= 90
-                              ? "bg-profit"
+                              ? "bg-profit rounded-full"
                               : percentFilled >= 50
-                                ? "bg-navy-500"
-                                : "bg-navy-300"
+                                ? "bg-navy-500 rounded-full"
+                                : "bg-navy-300 rounded-full"
                           }
                         />
-                        <div className="mt-1.5 flex items-center justify-between text-[11px] text-steel-400">
-                          <span>
+                        <div className="mt-2 flex items-center justify-between text-[11px]">
+                          <span className="text-steel-500">
                             {formatCurrency(totalSyndicated)} committed
                           </span>
-                          <span>
+                          <span className="font-medium text-navy-600">
                             {formatCurrency(Number(deal.syndicationOpen))} open
                           </span>
                         </div>
                       </div>
 
                       {/* CTA */}
-                      <div className="border-t border-border/40 bg-navy-50/30 px-5 py-2.5">
-                        <div className="flex items-center justify-between text-xs font-medium text-navy-600 group-hover:text-navy-800">
-                          <span>View Deal Details</span>
-                          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                      <div className="border-t border-border/40 bg-navy-50/40 px-5 py-2.5">
+                        <div className="flex items-center justify-between text-xs font-semibold text-navy-600 group-hover:text-navy-800">
+                          <span>Invest Now</span>
+                          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
                         </div>
                       </div>
                     </CardContent>
@@ -194,9 +229,13 @@ export default async function DealsPage() {
         </section>
       )}
 
+      {/* All Deals Table */}
       {otherDeals.length > 0 && (
         <section>
           <div className="mb-4 flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-steel-100">
+              <BarChart3 className="h-3.5 w-3.5 text-steel-500" />
+            </div>
             <h2 className="text-base font-semibold text-navy-800">
               All Deals
             </h2>
@@ -204,108 +243,126 @@ export default async function DealsPage() {
               {otherDeals.length}
             </span>
           </div>
-          <Card className="border-border/60">
+          <Card className="border-border/60 overflow-hidden">
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border/60 bg-steel-50/70">
-                      <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-steel-500">
+                      <th className="px-5 py-3.5 text-left text-[11px] font-semibold uppercase tracking-wider text-steel-500">
                         Merchant
                       </th>
-                      <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-steel-500">
+                      <th className="px-5 py-3.5 text-left text-[11px] font-semibold uppercase tracking-wider text-steel-500">
                         Status
                       </th>
-                      <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-steel-500">
+                      <th className="px-5 py-3.5 text-right text-[11px] font-semibold uppercase tracking-wider text-steel-500">
                         Funded
                       </th>
-                      <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-steel-500">
+                      <th className="hidden px-5 py-3.5 text-right text-[11px] font-semibold uppercase tracking-wider text-steel-500 md:table-cell">
                         Payback
                       </th>
-                      <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-steel-500">
+                      <th className="px-5 py-3.5 text-right text-[11px] font-semibold uppercase tracking-wider text-steel-500">
                         Collected
                       </th>
-                      <th className="hidden px-5 py-3 text-center text-xs font-semibold uppercase tracking-wide text-steel-500 md:table-cell">
+                      <th className="hidden px-5 py-3.5 text-right text-[11px] font-semibold uppercase tracking-wider text-steel-500 lg:table-cell">
+                        Return
+                      </th>
+                      <th className="hidden px-5 py-3.5 text-center text-[11px] font-semibold uppercase tracking-wider text-steel-500 md:table-cell">
                         Investors
                       </th>
-                      <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-steel-500">
-                        Progress
+                      <th className="px-5 py-3.5 text-right text-[11px] font-semibold uppercase tracking-wider text-steel-500">
+                        Collection
                       </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/40">
                     {otherDeals.map((deal) => {
-                      const pct =
-                        Number(deal.paybackAmount) > 0
-                          ? (Number(deal.totalCollected) /
-                              Number(deal.paybackAmount)) *
-                            100
-                          : 0;
+                      const fundedAmt = Number(deal.fundedAmount);
+                      const paybackAmt = Number(deal.paybackAmount);
+                      const collectedAmt = Number(deal.totalCollected);
+                      const collectionPct = paybackAmt > 0 ? (collectedAmt / paybackAmt) * 100 : 0;
+                      const isInProfit = collectedAmt > fundedAmt;
+                      const projectedReturn = ((paybackAmt - fundedAmt) / fundedAmt * 100);
+                      const isDelinquent = deal.status === "DELINQUENT";
+                      const isPaidOff = deal.status === "PAID_OFF";
+
                       return (
                         <tr
                           key={deal.id}
-                          className="group transition-colors hover:bg-navy-50/30"
+                          className={`group transition-colors hover:bg-navy-50/30 ${isDelinquent ? "bg-warning-light/20" : ""}`}
                         >
                           <td className="px-5 py-3.5">
                             <Link
                               href={`/deals/${deal.id}`}
-                              className="font-medium text-navy-800 group-hover:text-navy-600"
+                              className="font-semibold text-navy-800 group-hover:text-navy-600"
                             >
                               {deal.merchantName}
                             </Link>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              {deal.merchantIndustry && (
-                                <span className="text-[11px] text-steel-400">
-                                  {deal.merchantIndustry}
-                                </span>
-                              )}
-                              {deal.merchantState && (
-                                <span className="text-[11px] text-steel-400">
-                                  {deal.merchantState}
-                                </span>
+                            <div className="mt-0.5 flex items-center gap-2 text-[11px] text-steel-400">
+                              {deal.merchantIndustry && <span>{deal.merchantIndustry}</span>}
+                              {deal.merchantIndustry && deal.merchantState && <span className="text-steel-200">&middot;</span>}
+                              {deal.merchantState && <span>{deal.merchantState}</span>}
+                              {deal.termDays && (
+                                <>
+                                  <span className="text-steel-200">&middot;</span>
+                                  <span>{deal.termDays}d term</span>
+                                </>
                               )}
                             </div>
                           </td>
                           <td className="px-5 py-3.5">
-                            <StatusBadge status={deal.status} />
+                            <div className="flex items-center gap-1.5">
+                              <StatusBadge status={deal.status} />
+                              {isDelinquent && deal.missedPayments > 0 && (
+                                <span className="flex items-center gap-0.5 text-[10px] font-medium text-warning">
+                                  <AlertTriangle className="h-3 w-3" />
+                                  {deal.missedPayments}
+                                </span>
+                              )}
+                            </div>
                           </td>
-                          <td className="px-5 py-3.5 text-right tabular-nums font-medium">
-                            {formatCurrency(Number(deal.fundedAmount))}
+                          <td className="px-5 py-3.5 text-right tabular-nums font-semibold text-navy-900">
+                            {formatCurrency(fundedAmt)}
                           </td>
-                          <td className="px-5 py-3.5 text-right tabular-nums text-steel-600">
-                            {formatCurrency(Number(deal.paybackAmount))}
+                          <td className="hidden px-5 py-3.5 text-right tabular-nums text-steel-600 md:table-cell">
+                            {formatCurrency(paybackAmt)}
                           </td>
                           <td className="px-5 py-3.5 text-right tabular-nums">
-                            <span
-                              className={
-                                Number(deal.totalCollected) >=
-                                Number(deal.fundedAmount)
-                                  ? "text-profit font-medium"
-                                  : "text-steel-700"
-                              }
-                            >
-                              {formatCurrency(Number(deal.totalCollected))}
+                            <span className={`font-semibold ${isInProfit ? "text-profit" : isPaidOff ? "text-profit" : "text-navy-800"}`}>
+                              {formatCurrency(collectedAmt)}
                             </span>
                           </td>
-                          <td className="hidden px-5 py-3.5 text-center text-steel-500 md:table-cell">
-                            {deal._count.syndications}
+                          <td className="hidden px-5 py-3.5 text-right lg:table-cell">
+                            <span className="rounded-md bg-profit/10 px-1.5 py-0.5 text-xs font-semibold tabular-nums text-profit">
+                              {projectedReturn.toFixed(1)}%
+                            </span>
+                          </td>
+                          <td className="hidden px-5 py-3.5 text-center md:table-cell">
+                            <span className="text-steel-600">{deal._count.syndications}</span>
                           </td>
                           <td className="px-5 py-3.5">
-                            <div className="flex items-center justify-end gap-2">
+                            <div className="flex items-center justify-end gap-2.5">
                               <Progress
-                                value={pct}
-                                className="h-1.5 w-16"
+                                value={collectionPct}
+                                className="h-2 w-20 rounded-full"
                                 indicatorClassName={
-                                  pct >= 100
-                                    ? "bg-profit"
-                                    : pct >= 50
-                                      ? "bg-navy-400"
-                                      : "bg-steel-300"
+                                  isPaidOff
+                                    ? "bg-profit rounded-full"
+                                    : isDelinquent
+                                      ? "bg-warning rounded-full"
+                                      : collectionPct >= 70
+                                        ? "bg-profit rounded-full"
+                                        : "bg-navy-400 rounded-full"
                                 }
                               />
-                              <span className="w-10 text-right text-xs tabular-nums text-steel-500">
-                                {formatPercent(pct, 0)}
+                              <span className={`w-10 text-right text-xs font-semibold tabular-nums ${
+                                isPaidOff ? "text-profit" : isDelinquent ? "text-warning" : "text-steel-600"
+                              }`}>
+                                {formatPercent(collectionPct, 0)}
                               </span>
+                              {isPaidOff && (
+                                <CheckCircle2 className="h-3.5 w-3.5 text-profit shrink-0" />
+                              )}
                             </div>
                           </td>
                         </tr>

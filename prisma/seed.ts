@@ -29,7 +29,7 @@ async function main() {
     update: {},
     create: {
       email: "admin@pmfcapital.com",
-      passwordHash: await bcrypt.hash("AdminPass123", 12),
+      passwordHash: await bcrypt.hash("Test123!", 12),
       firstName: "James",
       lastName: "Morrison",
       role: UserRole.SUPER_ADMIN,
@@ -42,7 +42,7 @@ async function main() {
     update: {},
     create: {
       email: "ops@pmfcapital.com",
-      passwordHash: await bcrypt.hash("OpsPass123", 12),
+      passwordHash: await bcrypt.hash("Test123!", 12),
       firstName: "Sarah",
       lastName: "Chen",
       role: UserRole.ADMIN,
@@ -55,7 +55,7 @@ async function main() {
     update: {},
     create: {
       email: "rep1@pmfcapital.com",
-      passwordHash: await bcrypt.hash("RepPass123", 12),
+      passwordHash: await bcrypt.hash("Test123!", 12),
       firstName: "Michael",
       lastName: "Torres",
       role: UserRole.SYNDICATE_REP,
@@ -68,7 +68,7 @@ async function main() {
     update: {},
     create: {
       email: "rep2@pmfcapital.com",
-      passwordHash: await bcrypt.hash("RepPass123", 12),
+      passwordHash: await bcrypt.hash("Test123!", 12),
       firstName: "Jessica",
       lastName: "Park",
       role: UserRole.SYNDICATE_REP,
@@ -81,7 +81,7 @@ async function main() {
     update: {},
     create: {
       email: "exec@pmfcapital.com",
-      passwordHash: await bcrypt.hash("ExecPass123", 12),
+      passwordHash: await bcrypt.hash("Test123!", 12),
       firstName: "David",
       lastName: "Whitfield",
       role: UserRole.READ_ONLY,

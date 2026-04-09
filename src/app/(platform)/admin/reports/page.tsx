@@ -24,7 +24,7 @@ export default async function ReportsPage() {
     <div>
       <PageHeader title="Reports" description="Office-wide financial reports and analytics" />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-6">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 mb-6">
         <StatCard title="Total Deals" value={String(dealCount)} icon={Briefcase} />
         <StatCard title="Active Deals" value={String(activeDeals)} icon={TrendingUp} />
         <StatCard title="Active Users" value={String(userCount)} icon={Users} />

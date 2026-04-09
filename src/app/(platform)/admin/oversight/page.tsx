@@ -58,7 +58,7 @@ export default async function OversightPage() {
         </Badge>
       </PageHeader>
 
-      <div className="grid gap-4 md:grid-cols-4 mb-6">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 mb-6">
         <StatCard title="Total Users" value={String(totalUsers)} icon={Users} />
         <StatCard title="Active Users" value={String(allUsers)} icon={Activity} />
         <StatCard title="Admin Users" value={String(adminUsers.length)} icon={Shield} />

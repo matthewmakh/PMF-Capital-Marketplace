@@ -87,7 +87,7 @@ export default function PayoutsPage() {
     <div>
       <PageHeader title="Payouts" description="Request and track your payouts" />
 
-      <div className="grid gap-4 md:grid-cols-3 mb-6">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 mb-6">
         <StatCard title="Completed Payouts" value={formatCurrency(completedTotal)} icon={CheckCircle} trend="up" />
         <StatCard title="Pending Requests" value={formatCurrency(pendingTotal)} icon={Clock} />
         <StatCard title="Total Requests" value={String(payouts.length)} icon={Wallet} />

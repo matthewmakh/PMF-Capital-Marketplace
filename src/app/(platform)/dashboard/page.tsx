@@ -73,7 +73,7 @@ async function InvestorDashboard({ userId }: { userId: string }) {
         description="Your investment overview"
       />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
           title="Total Invested"
           value={formatCurrency(totalInvested)}
@@ -207,7 +207,7 @@ async function AdminDashboard({ userId }: { userId: string }) {
         description="Office-wide performance overview"
       />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
           title="Total Capital Deployed"
           value={formatCurrency(Number(totalCapital._sum.amount || 0))}
@@ -295,7 +295,7 @@ async function ExecutiveDashboard() {
         description="Office performance at a glance"
       />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
           title="Total Deals"
           value={String(totalDeals)}

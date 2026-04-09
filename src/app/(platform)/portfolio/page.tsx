@@ -57,7 +57,7 @@ export default async function PortfolioPage() {
     <div>
       <PageHeader title="My Portfolio" description="Track your investments and returns" />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 mb-6">
         <StatCard title="Total Invested" value={formatCurrency(totalInvested.toNumber())} icon={DollarSign} />
         <StatCard title="Total Distributed" value={formatCurrency(totalDistributed.toNumber())} icon={TrendingUp} trend={totalDistributed.gt(0) ? "up" : "neutral"} />
         <StatCard title="Profit Earned" value={formatCurrency(totalProfit.toNumber())} subtitle={`${roi.toFixed(1)}% ROI`} icon={PieChart} trend={totalProfit.gt(0) ? "up" : "neutral"} />

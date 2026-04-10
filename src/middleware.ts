@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
-const publicRoutes = ["/login", "/forgot-password"];
+const publicRoutes = ["/login", "/forgot-password", "/demo"];
 const adminRoutes = ["/admin"];
 const apiAdminRoutes = ["/api/users", "/api/audit", "/api/email"];
 const mfaExemptRoutes = ["/setup-mfa", "/mfa-verify", "/api/mfa/", "/api/auth/"];

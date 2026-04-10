@@ -1,7 +1,8 @@
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
-const publicRoutes = ["/login", "/forgot-password", "/demo"];
+const publicRoutes = ["/login", "/forgot-password"];
+const alwaysPublicRoutes = ["/demo"];
 const adminRoutes = ["/admin"];
 const apiAdminRoutes = ["/api/users", "/api/audit", "/api/email"];
 const mfaExemptRoutes = ["/setup-mfa", "/mfa-verify", "/api/mfa/", "/api/auth/"];
@@ -12,6 +13,11 @@ export default auth((req) => {
 
   // Always allow auth API
   if (pathname.startsWith("/api/auth")) return NextResponse.next();
+
+  // Always-public routes (accessible whether logged in or not)
+  if (alwaysPublicRoutes.some((r) => pathname.startsWith(r))) {
+    return NextResponse.next();
+  }
 
   // MFA-exempt routes — allow through but handle public route redirect
   if (mfaExemptRoutes.some((r) => pathname.startsWith(r))) {

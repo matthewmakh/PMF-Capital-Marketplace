@@ -9,6 +9,9 @@ declare module "next-auth" {
     lastName: string;
     role: UserRole;
     isHidden: boolean;
+    mfaEnabled: boolean;
+    mfaRequired: boolean;
+    mfaVerified: boolean;
   }
 
   interface Session {
@@ -19,6 +22,9 @@ declare module "next-auth" {
       lastName: string;
       role: UserRole;
       isHidden: boolean;
+      mfaEnabled: boolean;
+      mfaRequired: boolean;
+      mfaVerified: boolean;
     };
   }
 }
@@ -31,5 +37,8 @@ declare module "next-auth/jwt" {
     lastName: string;
     role: UserRole;
     isHidden: boolean;
+    mfaEnabled: boolean;
+    mfaRequired: boolean;
+    mfaVerified: boolean;
   }
 }

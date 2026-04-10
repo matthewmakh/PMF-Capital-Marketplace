@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { ROLE_LABELS } from "@/lib/constants";
 import { Shield, Users, Activity, Eye } from "lucide-react";
+import { MFAToggle } from "./mfa-toggle";
 
 export default async function OversightPage() {
   const session = await auth();
@@ -68,6 +69,10 @@ export default async function OversightPage() {
           subtitle={`${totalPayoutsApproved._count} payouts`}
           icon={Eye}
         />
+      </div>
+
+      <div className="mb-6">
+        <MFAToggle />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

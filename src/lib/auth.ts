@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
+import { isMFARequired } from "./mfa";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
@@ -28,7 +29,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!isValid) return null;
 
-        // Update last login
+        const mfaRequired = await isMFARequired(prisma);
+
         await prisma.user.update({
           where: { id: user.id },
           data: { lastLoginAt: new Date() },
@@ -41,19 +43,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           lastName: user.lastName,
           role: user.role,
           isHidden: user.isHidden,
+          mfaEnabled: user.mfaEnabled,
+          mfaRequired,
+          // If MFA is required, user starts unverified regardless
+          mfaVerified: !mfaRequired,
         };
       },
     }),
   ],
-  session: {
-    strategy: "jwt",
-    maxAge: 24 * 60 * 60, // 24 hours
-  },
-  pages: {
-    signIn: "/login",
-  },
+  session: { strategy: "jwt", maxAge: 24 * 60 * 60 },
+  pages: { signIn: "/login" },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.email = user.email!;
@@ -61,6 +62,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.lastName = user.lastName;
         token.role = user.role;
         token.isHidden = user.isHidden;
+        token.mfaEnabled = user.mfaEnabled;
+        token.mfaRequired = user.mfaRequired;
+        token.mfaVerified = user.mfaVerified;
+      }
+      // Session update — used after MFA verification to set mfaVerified=true
+      if (trigger === "update" && session?.mfaVerified !== undefined) {
+        token.mfaVerified = session.mfaVerified;
+      }
+      if (trigger === "update" && session?.mfaEnabled !== undefined) {
+        token.mfaEnabled = session.mfaEnabled;
       }
       return token;
     },
@@ -72,6 +83,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       user.lastName = token.lastName;
       user.role = token.role;
       user.isHidden = token.isHidden;
+      user.mfaEnabled = token.mfaEnabled;
+      user.mfaRequired = token.mfaRequired;
+      user.mfaVerified = token.mfaVerified;
       return session;
     },
   },

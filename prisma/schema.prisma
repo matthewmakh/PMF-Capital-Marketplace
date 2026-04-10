@@ -89,6 +89,13 @@ model User {
   phone         String?
   avatarUrl     String?
   lastLoginAt   DateTime?
+
+  // MFA
+  mfaEnabled       Boolean   @default(false)
+  mfaSecret        String?   // Encrypted TOTP secret
+  mfaRecoveryCodes String?   // JSON array of hashed recovery codes
+  mfaVerifiedAt    DateTime?
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

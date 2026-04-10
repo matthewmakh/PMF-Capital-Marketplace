@@ -1,9 +1,11 @@
 "use client";
 import { FadeIn, SlideIn, CountUp, ProgressFill } from "./animations";
+import { useState, useEffect } from "react";
 import {
   DollarSign, TrendingUp, Users, Briefcase, Shield, ShieldCheck,
   MapPin, Clock, AlertTriangle, CheckCircle2, ArrowUpRight,
   FileText, Wallet, BarChart3, CircleDollarSign, KeyRound,
+  Mail, Inbox,
 } from "lucide-react";
 
 // ================================================================
@@ -98,9 +100,100 @@ export function SceneAdminDashboard({ active }: { active: boolean }) {
 }
 
 // ================================================================
-// SCENE 3: DEAL MARKETPLACE
+// SCENE 3: EMAIL INGESTION
+// ================================================================
+export function SceneEmailIngestion({ active }: { active: boolean }) {
+  return (
+    <div className="px-6 sm:px-10 py-8 max-w-5xl mx-auto">
+      <FadeIn show={active} delay={0}>
+        <p className="text-xs uppercase tracking-widest text-navy-400 mb-1">Deal Intake</p>
+        <h2 className="text-2xl font-bold text-white mb-6">Email → Pipeline in Seconds</h2>
+      </FadeIn>
+
+      <div className="grid sm:grid-cols-2 gap-6 items-start">
+        {/* Incoming email */}
+        <SlideIn show={active} delay={300} direction="left">
+          <div className="rounded-xl bg-navy-900/80 border border-navy-700/50 overflow-hidden">
+            <div className="bg-navy-800/50 px-4 py-3 border-b border-navy-700/30 flex items-center gap-3">
+              <Mail className="h-4 w-4 text-navy-400" />
+              <div>
+                <p className="text-sm font-semibold text-white">New Deal Submission</p>
+                <p className="text-[11px] text-navy-500">From: broker@meridianfunding.com</p>
+              </div>
+            </div>
+            <div className="px-4 py-4">
+              <p className="text-xs text-navy-400 mb-3">Subject: <span className="text-navy-200">New Deal — Greenfield Medical Supply</span></p>
+              <div className="rounded-lg bg-navy-800/50 px-3 py-3 text-xs text-navy-300 leading-relaxed">
+                <p>Hi team,</p>
+                <p className="mt-2">Submitting a new deal for review:</p>
+                <p className="mt-2">
+                  <span className="text-white font-medium">Merchant:</span> Greenfield Medical Supply<br />
+                  <span className="text-white font-medium">Amount:</span> $60,000<br />
+                  <span className="text-white font-medium">Factor Rate:</span> 1.30x<br />
+                  <span className="text-white font-medium">Term:</span> 180 days<br />
+                  <span className="text-white font-medium">Industry:</span> Healthcare
+                </p>
+                <p className="mt-2 text-navy-500">Please review and publish when ready.</p>
+              </div>
+            </div>
+          </div>
+        </SlideIn>
+
+        {/* Arrow + Parsed data */}
+        <div>
+          <FadeIn show={active} delay={800}>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-px flex-1 bg-navy-700/50" />
+              <div className="flex items-center gap-1.5 rounded-full bg-navy-800 border border-navy-700/50 px-3 py-1">
+                <Inbox className="h-3.5 w-3.5 text-navy-400" />
+                <span className="text-[11px] text-navy-400 font-medium">Auto-Parsed</span>
+              </div>
+              <div className="h-px flex-1 bg-navy-700/50" />
+            </div>
+          </FadeIn>
+
+          <SlideIn show={active} delay={900} direction="right">
+            <div className="rounded-xl bg-navy-900/80 border border-navy-700/50 p-4">
+              <p className="text-xs uppercase tracking-wider text-navy-500 mb-3">Extracted Deal Data</p>
+              {[
+                { label: "Merchant", value: "Greenfield Medical Supply", delay: 1200 },
+                { label: "Funding Amount", value: "$60,000", delay: 1500 },
+                { label: "Factor Rate", value: "1.30x", delay: 1800 },
+                { label: "Term", value: "180 days", delay: 2100 },
+                { label: "Industry", value: "Healthcare", delay: 2400 },
+              ].map((field, i) => (
+                <FadeIn key={i} show={active} delay={field.delay}>
+                  <div className="flex justify-between py-1.5 border-b border-navy-800/30 last:border-0">
+                    <span className="text-xs text-navy-500">{field.label}</span>
+                    <span className="text-sm font-medium text-white">{field.value}</span>
+                  </div>
+                </FadeIn>
+              ))}
+              <FadeIn show={active} delay={2800}>
+                <div className="flex items-center gap-2 rounded-lg bg-profit/10 border border-profit/20 px-3 py-2 mt-3">
+                  <CheckCircle2 className="h-4 w-4 text-profit" />
+                  <span className="text-sm text-profit font-medium">Added to Pipeline</span>
+                </div>
+              </FadeIn>
+            </div>
+          </SlideIn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ================================================================
+// SCENE 4: DEAL MARKETPLACE
 // ================================================================
 export function SceneDealMarketplace({ active }: { active: boolean }) {
+  const [invested, setInvested] = useState(false);
+  useEffect(() => {
+    if (!active) { setInvested(false); return; }
+    const t = setTimeout(() => setInvested(true), 2800);
+    return () => clearTimeout(t);
+  }, [active]);
+
   const deals = [
     { name: "Metro Quick Mart LLC", industry: "Retail", state: "NY", amount: 50000, factor: 1.35, filled: 81, returnPct: 35, investors: 3 },
     { name: "Bella's Italian Kitchen", industry: "Restaurant", state: "NJ", amount: 35000, factor: 1.35, filled: 96, returnPct: 35, investors: 4 },
@@ -114,41 +207,52 @@ export function SceneDealMarketplace({ active }: { active: boolean }) {
       </FadeIn>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        {deals.map((d, i) => (
-          <SlideIn key={i} show={active} delay={400 + i * 300}>
-            <div className="rounded-xl bg-navy-900/80 border border-navy-700/50 overflow-hidden">
-              <div className="bg-navy-800/50 px-4 py-3 border-b border-navy-700/30">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-white text-sm">{d.name}</h3>
-                  <span className="rounded-md bg-profit/15 px-2 py-0.5 text-xs font-bold text-profit">{d.returnPct}%</span>
-                </div>
-                <div className="mt-1 flex gap-2 text-[11px] text-navy-400">
-                  <span className="flex items-center gap-0.5"><TrendingUp className="h-3 w-3" />{d.industry}</span>
-                  <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" />{d.state}</span>
-                </div>
-              </div>
-              <div className="px-4 py-3">
-                <div className="grid grid-cols-2 gap-2 text-center mb-3">
-                  <div className="rounded-lg bg-navy-800/70 px-2 py-1.5">
-                    <p className="text-[10px] uppercase text-navy-500">Amount</p>
-                    <p className="text-sm font-bold text-white">${(d.amount / 1000).toFixed(0)}K</p>
+        {deals.map((d, i) => {
+          const isTarget = i === 2;
+          const fillValue = isTarget && invested ? 53 : d.filled;
+          const investorCount = isTarget && invested ? 2 : d.investors;
+          return (
+            <SlideIn key={i} show={active} delay={400 + i * 300}>
+              <div className="rounded-xl bg-navy-900/80 border border-navy-700/50 overflow-hidden relative">
+                <div className="bg-navy-800/50 px-4 py-3 border-b border-navy-700/30">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-bold text-white text-sm">{d.name}</h3>
+                    <span className="rounded-md bg-profit/15 px-2 py-0.5 text-xs font-bold text-profit">{d.returnPct}%</span>
                   </div>
-                  <div className="rounded-lg bg-navy-800/70 px-2 py-1.5">
-                    <p className="text-[10px] uppercase text-navy-500">Factor</p>
-                    <p className="text-sm font-bold text-white">{d.factor}x</p>
+                  <div className="mt-1 flex gap-2 text-[11px] text-navy-400">
+                    <span className="flex items-center gap-0.5"><TrendingUp className="h-3 w-3" />{d.industry}</span>
+                    <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" />{d.state}</span>
                   </div>
                 </div>
-                <div className="flex items-center justify-between text-xs mb-1.5">
-                  <span className="text-navy-400 flex items-center gap-1"><Users className="h-3 w-3" />{d.investors}</span>
-                  <span className={`font-bold ${d.filled >= 90 ? "text-profit" : "text-navy-300"}`}>
-                    <CountUp end={d.filled} suffix="%" show={active} delay={1000 + i * 300} />
-                  </span>
+                <div className="px-4 py-3">
+                  <div className="grid grid-cols-2 gap-2 text-center mb-3">
+                    <div className="rounded-lg bg-navy-800/70 px-2 py-1.5">
+                      <p className="text-[10px] uppercase text-navy-500">Amount</p>
+                      <p className="text-sm font-bold text-white">${(d.amount / 1000).toFixed(0)}K</p>
+                    </div>
+                    <div className="rounded-lg bg-navy-800/70 px-2 py-1.5">
+                      <p className="text-[10px] uppercase text-navy-500">Factor</p>
+                      <p className="text-sm font-bold text-white">{d.factor}x</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-xs mb-1.5">
+                    <span className="text-navy-400 flex items-center gap-1"><Users className="h-3 w-3" />{investorCount}</span>
+                    <span className={`font-bold ${fillValue >= 90 ? "text-profit" : "text-navy-300"}`}>
+                      <CountUp end={fillValue} suffix="%" show={active} delay={1000 + i * 300} />
+                    </span>
+                  </div>
+                  <ProgressFill value={fillValue} delay={800 + i * 300} color={fillValue >= 90 ? "bg-profit" : "bg-navy-500"} show={active} />
+                  {isTarget && (
+                    <div className={`mt-3 flex items-center gap-2 rounded-lg bg-profit/10 border border-profit/20 px-3 py-2 transition-all duration-700 ${invested ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
+                      <CircleDollarSign className="h-4 w-4 text-profit" />
+                      <span className="text-xs text-profit font-semibold">Invested $5,000</span>
+                    </div>
+                  )}
                 </div>
-                <ProgressFill value={d.filled} delay={800 + i * 300} color={d.filled >= 90 ? "bg-profit" : "bg-navy-500"} show={active} />
               </div>
-            </div>
-          </SlideIn>
-        ))}
+            </SlideIn>
+          );
+        })}
       </div>
 
       <FadeIn show={active} delay={2200}>
@@ -248,6 +352,13 @@ export function SceneDealDetail({ active }: { active: boolean }) {
 // SCENE 5: PAYMENT DISTRIBUTION
 // ================================================================
 export function ScenePayment({ active }: { active: boolean }) {
+  const [posted, setPosted] = useState(false);
+  useEffect(() => {
+    if (!active) { setPosted(false); return; }
+    const t = setTimeout(() => setPosted(true), 2800);
+    return () => clearTimeout(t);
+  }, [active]);
+
   return (
     <div className="px-6 sm:px-10 py-8 max-w-4xl mx-auto">
       <FadeIn show={active} delay={0}>
@@ -295,9 +406,27 @@ export function ScenePayment({ active }: { active: boolean }) {
                 </div>
               </FadeIn>
             ))}
+
+            {/* Running totals that update after payment posts */}
             <FadeIn show={active} delay={2200}>
-              <div className="mt-3 pt-3 border-t border-navy-700/50 text-xs text-navy-500">
-                <p>Principal recovers first. Once invested amount is returned, all subsequent distributions flow as profit.</p>
+              <div className="mt-3 pt-3 border-t border-navy-700/50">
+                <p className="text-xs uppercase tracking-wider text-navy-500 mb-2">Running Totals</p>
+                <div className="flex justify-between text-sm py-1">
+                  <span className="text-navy-400">Total Collected</span>
+                  <span className={`font-bold tabular-nums transition-all duration-700 ${posted ? "text-profit" : "text-navy-200"}`}>
+                    {posted ? "$42,000.00" : "$41,625.00"}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm py-1">
+                  <span className="text-navy-400">Remaining</span>
+                  <span className="font-bold tabular-nums text-navy-200 transition-all duration-700">
+                    {posted ? "$25,500.00" : "$25,875.00"}
+                  </span>
+                </div>
+                <div className="mt-2">
+                  <ProgressFill value={posted ? 62 : 61} delay={2400} color="bg-navy-400" show={active} className="h-1.5" />
+                  <p className="text-[10px] text-navy-600 text-right mt-0.5">{posted ? "62.2%" : "61.7%"} collected</p>
+                </div>
               </div>
             </FadeIn>
           </div>
@@ -500,13 +629,19 @@ export function SceneClosing({ active }: { active: boolean }) {
           <span className="text-2xl font-bold text-white">PMF</span>
         </div>
       </FadeIn>
-      <FadeIn show={active} delay={600}>
-        <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">Built for Premier Merchant Funding</h2>
+      <FadeIn show={active} delay={500}>
+        <p className="text-sm uppercase tracking-widest text-navy-400 mb-3">Prepared Exclusively For</p>
       </FadeIn>
-      <FadeIn show={active} delay={1000}>
-        <p className="text-lg text-navy-300 mb-8 max-w-lg">A private syndication platform that transforms deal flow into structured investment opportunities.</p>
+      <FadeIn show={active} delay={800}>
+        <h2 className="text-3xl sm:text-5xl font-bold text-white mb-2">Premier Merchant Funding</h2>
       </FadeIn>
-      <FadeIn show={active} delay={1400}>
+      <FadeIn show={active} delay={1100}>
+        <div className="h-px w-24 bg-navy-600 mx-auto my-4" />
+      </FadeIn>
+      <FadeIn show={active} delay={1300}>
+        <p className="text-lg text-navy-300 mb-8 max-w-lg">Your private syndication platform — built to transform deal flow into structured investment opportunities.</p>
+      </FadeIn>
+      <FadeIn show={active} delay={1700}>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
           {[
             { value: "9", label: "Deal Statuses" },
@@ -521,8 +656,9 @@ export function SceneClosing({ active }: { active: boolean }) {
           ))}
         </div>
       </FadeIn>
-      <FadeIn show={active} delay={2000}>
-        <p className="text-navy-400 text-sm">Ready to get started?</p>
+      <FadeIn show={active} delay={2200}>
+        <p className="text-xl font-semibold text-white mb-2">Let&apos;s launch your marketplace.</p>
+        <p className="text-sm text-navy-500">Ready for deployment — reach out to schedule onboarding.</p>
       </FadeIn>
     </div>
   );

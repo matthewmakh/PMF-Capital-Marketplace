@@ -33,9 +33,9 @@ export default function MFAVerifyPage() {
       if (data.remainingRecoveryCodes !== undefined && data.remainingRecoveryCodes < 3) {
         alert(`Warning: Only ${data.remainingRecoveryCodes} recovery codes remaining.`);
       }
+      // Update JWT session then hard-navigate to force middleware re-check
       await updateSession({ mfaVerified: true });
-      router.push("/dashboard");
-      router.refresh();
+      window.location.href = "/dashboard";
     } catch (err) {
       setError(err instanceof Error ? err.message : "Verification failed");
     } finally {

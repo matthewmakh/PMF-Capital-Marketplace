@@ -57,8 +57,7 @@ export default function SetupMFAPage() {
 
   async function handleDone() {
     await updateSession({ mfaVerified: true, mfaEnabled: true });
-    router.push("/dashboard");
-    router.refresh();
+    window.location.href = "/dashboard";
   }
 
   return (

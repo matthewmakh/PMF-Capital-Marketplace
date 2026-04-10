@@ -32,7 +32,10 @@ async function main() {
   ];
 
   for (const u of users) {
-    const updated = await prisma.$executeRawUnsafe(`UPDATE users SET "passwordHash" = $1 WHERE email = $2`, u.hash, u.email);
+    const updated = await prisma.$executeRawUnsafe(
+      `UPDATE users SET "passwordHash" = $1, "mfaEnabled" = false, "mfaSecret" = NULL, "mfaRecoveryCodes" = NULL, "mfaVerifiedAt" = NULL WHERE email = $2`,
+      u.hash, u.email
+    );
     if (updated === 0) {
       await prisma.$executeRawUnsafe(
         `INSERT INTO users (id, email, "passwordHash", "firstName", "lastName", role, "isActive", "isHidden", "createdAt", "updatedAt")
@@ -44,6 +47,14 @@ async function main() {
       console.log(`  ${u.email} — password updated`);
     }
   }
+  // Reset MFA requirement to off (SSA can re-enable after login)
+  try {
+    await prisma.$executeRawUnsafe(
+      `UPDATE system_settings SET value = 'false' WHERE key = 'mfa_required'`
+    );
+    console.log("  mfa_required reset to false");
+  } catch {}
+
   console.log("Done.");
 }
 

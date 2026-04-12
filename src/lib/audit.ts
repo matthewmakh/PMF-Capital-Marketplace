@@ -13,6 +13,22 @@ interface LogActionParams {
 }
 
 /**
+ * Extract IP address and user-agent from a Request object.
+ * Works with Next.js middleware and API routes behind reverse proxies.
+ */
+export function getRequestContext(req: Request): {
+  ipAddress: string;
+  userAgent: string;
+} {
+  const forwarded = req.headers.get("x-forwarded-for");
+  const ipAddress = forwarded
+    ? forwarded.split(",")[0].trim()
+    : req.headers.get("x-real-ip") || "unknown";
+  const userAgent = req.headers.get("user-agent") || "unknown";
+  return { ipAddress, userAgent };
+}
+
+/**
  * Creates an immutable audit log entry.
  *
  * metadata should include:

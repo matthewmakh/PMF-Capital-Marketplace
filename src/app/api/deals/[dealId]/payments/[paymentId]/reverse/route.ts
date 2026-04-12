@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isAdmin } from "@/lib/permissions";
-import { logAction } from "@/lib/audit";
+import { logAction, getRequestContext } from "@/lib/audit";
 import { reversePayment } from "@/lib/calculations/pro-rata";
 import { z } from "zod";
 
@@ -73,6 +73,7 @@ export async function POST(
         beforeCollected: result.beforeCollected,
         afterCollected: result.afterCollected,
       },
+      ...getRequestContext(req),
     });
 
     return NextResponse.json({ reversed: true, paymentId });

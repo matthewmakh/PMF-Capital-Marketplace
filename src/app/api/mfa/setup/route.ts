@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { generateTOTPSecret, generateRecoveryCodes, verifyTOTP, encryptSecret, decryptSecret } from "@/lib/mfa";
-import { logAction } from "@/lib/audit";
+import { logAction, getRequestContext } from "@/lib/audit";
 import QRCode from "qrcode";
 import { z } from "zod";
 
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
 
     if (result.alreadyEnabled) return NextResponse.json({ enabled: true });
 
-    await logAction({ action: "SETTINGS_UPDATED", actorId: session.user.id, metadata: { change: "mfa_enabled" } });
+    await logAction({ action: "SETTINGS_UPDATED", actorId: session.user.id, metadata: { change: "mfa_enabled" }, ...getRequestContext(req) });
     return NextResponse.json({ enabled: true, recoveryCodes: result.recoveryCodes });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : "Setup failed" }, { status: 400 });

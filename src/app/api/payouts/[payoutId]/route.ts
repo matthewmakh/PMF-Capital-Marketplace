@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isAdmin } from "@/lib/permissions";
-import { logAction } from "@/lib/audit";
+import { logAction, getRequestContext } from "@/lib/audit";
 import { PayoutStatus } from "@prisma/client";
 
 // Valid status transitions — enforced in code, not just UI
@@ -107,6 +107,7 @@ export async function PATCH(
         newStatus: targetStatus,
         ...(denialReason ? { reason: denialReason } : {}),
       },
+      ...getRequestContext(req),
     });
 
     return NextResponse.json(result.updated);

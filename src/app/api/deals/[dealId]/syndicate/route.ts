@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { canInvest } from "@/lib/permissions";
-import { logAction } from "@/lib/audit";
+import { logAction, getRequestContext } from "@/lib/audit";
 import { z } from "zod";
 import Decimal from "decimal.js";
 
@@ -123,6 +123,7 @@ export async function POST(
       resourceType: "deal",
       resourceId: dealId,
       metadata: { amount, syndicationId: result.id },
+      ...getRequestContext(req),
     });
 
     return NextResponse.json(result, { status: 201 });

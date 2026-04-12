@@ -93,6 +93,15 @@ export default async function DealsPage() {
         </CardContent>
       </Card>
 
+      {/* Empty state */}
+      {openDeals.length === 0 && otherDeals.length === 0 && (
+        <Card className="py-12 text-center">
+          <CardContent>
+            <p className="text-steel-500">No deals available yet. Check back soon.</p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Open for Syndication */}
       {openDeals.length > 0 && (
         <section className="mb-8">

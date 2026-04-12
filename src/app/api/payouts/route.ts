@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isAdmin } from "@/lib/permissions";
-import { logAction } from "@/lib/audit";
+import { logAction, getRequestContext } from "@/lib/audit";
 import { calculateAvailableBalance } from "@/lib/calculations/pro-rata";
 import { z } from "zod";
 import Decimal from "decimal.js";
@@ -102,6 +102,7 @@ export async function POST(req: Request) {
       resourceType: "payout",
       resourceId: payout.id,
       metadata: { amount },
+      ...getRequestContext(req),
     });
 
     return NextResponse.json(payout, { status: 201 });

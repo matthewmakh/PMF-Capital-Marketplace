@@ -61,8 +61,8 @@ export default function MFAVerifyPage() {
             <Input
               id="mfa-code" type="text"
               inputMode={useRecovery ? "text" : "numeric"}
-              maxLength={useRecovery ? 10 : 6}
-              placeholder={useRecovery ? "XXXXXXXXXX" : "000000"}
+              maxLength={useRecovery ? 35 : 6}
+              placeholder={useRecovery ? "XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" : "000000"}
               value={code}
               onChange={(e) => setCode(useRecovery ? e.target.value.toUpperCase() : e.target.value.replace(/\D/g, ""))}
               className={useRecovery ? "text-center text-lg tracking-widest font-mono" : "text-center text-2xl tracking-[0.5em] font-mono"}

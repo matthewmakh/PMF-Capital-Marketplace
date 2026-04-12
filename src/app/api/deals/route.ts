@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isAdmin } from "@/lib/permissions";
-import { logAction } from "@/lib/audit";
+import { logAction, getRequestContext } from "@/lib/audit";
 import { z } from "zod";
 
 const createDealSchema = z.object({
@@ -32,9 +32,18 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status");
 
-  const where: Record<string, unknown> = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const where: any = {};
   if (status) {
     where.status = status;
+  }
+
+  // Non-admins see only: deals open for syndication OR deals they're invested in
+  if (!isAdmin(session.user.role)) {
+    where.OR = [
+      { status: { in: ["OPEN_FOR_SYNDICATION", "FULLY_ALLOCATED"] } },
+      { syndications: { some: { userId: session.user.id } } },
+    ];
   }
 
   const deals = await prisma.deal.findMany({
@@ -44,6 +53,13 @@ export async function GET(req: Request) {
     },
     orderBy: { createdAt: "desc" },
   });
+
+  // Strip internal notes for non-admins
+  if (!isAdmin(session.user.role)) {
+    return NextResponse.json(
+      deals.map((d) => ({ ...d, internalNotes: undefined }))
+    );
+  }
 
   return NextResponse.json(deals);
 }
@@ -94,6 +110,7 @@ export async function POST(req: Request) {
     resourceType: "deal",
     resourceId: deal.id,
     metadata: { merchantName: data.merchantName, fundedAmount: data.fundedAmount },
+    ...getRequestContext(req),
   });
 
   return NextResponse.json(deal, { status: 201 });

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { verifyTOTP, verifyRecoveryCode, decryptSecret } from "@/lib/mfa";
-import { logAction } from "@/lib/audit";
+import { logAction, getRequestContext } from "@/lib/audit";
 import { checkRateLimit, resetRateLimit } from "@/lib/rate-limit";
 import { z } from "zod";
 
@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   const rlKey = `mfa:${session.user.id}`;
   const rl = checkRateLimit(rlKey);
   if (!rl.allowed) {
-    await logAction({ action: "USER_LOGIN", actorId: session.user.id, metadata: { event: "mfa_rate_limited" } });
+    await logAction({ action: "USER_LOGIN", actorId: session.user.id, metadata: { event: "mfa_rate_limited" }, ...getRequestContext(req) });
     return NextResponse.json({ error: `Too many attempts. Try again in ${rl.retryAfterSeconds}s.` }, { status: 429 });
   }
 
@@ -39,22 +39,22 @@ export async function POST(req: Request) {
     }).catch((e) => { if (e.message === "INVALID") return null; throw e; });
 
     if (result === null) {
-      await logAction({ action: "USER_LOGIN", actorId: session.user.id, metadata: { event: "mfa_recovery_failed" } });
+      await logAction({ action: "USER_LOGIN", actorId: session.user.id, metadata: { event: "mfa_recovery_failed" }, ...getRequestContext(req) });
       return NextResponse.json({ error: "Invalid recovery code" }, { status: 400 });
     }
     resetRateLimit(rlKey);
-    await logAction({ action: "USER_LOGIN", actorId: session.user.id, metadata: { event: "mfa_recovery_used", remaining: result } });
+    await logAction({ action: "USER_LOGIN", actorId: session.user.id, metadata: { event: "mfa_recovery_used", remaining: result }, ...getRequestContext(req) });
     return NextResponse.json({ verified: true, remainingRecoveryCodes: result });
   }
 
   const rawSecret = decryptSecret(user.mfaSecret);
   if (!verifyTOTP(rawSecret, code)) {
-    await logAction({ action: "USER_LOGIN", actorId: session.user.id, metadata: { event: "mfa_failed", attempt: rl.attempts } });
+    await logAction({ action: "USER_LOGIN", actorId: session.user.id, metadata: { event: "mfa_failed", attempt: rl.attempts }, ...getRequestContext(req) });
     return NextResponse.json({ error: "Invalid code" }, { status: 400 });
   }
 
   resetRateLimit(rlKey);
   await prisma.user.update({ where: { id: session.user.id }, data: { mfaVerifiedAt: new Date() } });
-  await logAction({ action: "USER_LOGIN", actorId: session.user.id, metadata: { event: "mfa_verified" } });
+  await logAction({ action: "USER_LOGIN", actorId: session.user.id, metadata: { event: "mfa_verified" }, ...getRequestContext(req) });
   return NextResponse.json({ verified: true });
 }

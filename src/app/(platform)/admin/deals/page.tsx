@@ -247,6 +247,11 @@ export default async function AdminDealsPage() {
                   })}
                 </tbody>
               </table>
+              {otherDeals.length === 0 && (
+                <div className="py-10 text-center text-steel-500 text-sm">
+                  No deals yet. Create your first deal to get started.
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

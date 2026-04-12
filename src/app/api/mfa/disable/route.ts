@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { verifyTOTP, verifyRecoveryCode, decryptSecret } from "@/lib/mfa";
-import { logAction } from "@/lib/audit";
+import { logAction, getRequestContext } from "@/lib/audit";
 import { checkRateLimit, resetRateLimit } from "@/lib/rate-limit";
 import { z } from "zod";
 
@@ -35,6 +35,6 @@ export async function POST(req: Request) {
 
   resetRateLimit(rlKey);
   await prisma.user.update({ where: { id: session.user.id }, data: { mfaEnabled: false, mfaSecret: null, mfaRecoveryCodes: null, mfaVerifiedAt: null } });
-  await logAction({ action: "SETTINGS_UPDATED", actorId: session.user.id, metadata: { change: "mfa_disabled", method: parsed.data.useRecoveryCode ? "recovery" : "totp" } });
+  await logAction({ action: "SETTINGS_UPDATED", actorId: session.user.id, metadata: { change: "mfa_disabled", method: parsed.data.useRecoveryCode ? "recovery" : "totp" }, ...getRequestContext(req) });
   return NextResponse.json({ disabled: true });
 }

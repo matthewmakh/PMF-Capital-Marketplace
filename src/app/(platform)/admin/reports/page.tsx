@@ -5,7 +5,8 @@ import { PageHeader } from "@/components/shared/page-header";
 import { StatCard } from "@/components/shared/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
-import { DollarSign, Briefcase, Users, TrendingUp } from "lucide-react";
+import { DollarSign, Briefcase, Users, TrendingUp, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default async function ReportsPage() {
   const session = await auth();
@@ -35,12 +36,21 @@ export default async function ReportsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Detailed Reports</CardTitle>
+          <CardTitle className="text-base">Export Data</CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            CSV/PDF export and advanced analytics will be available in Phase 2.
-          </p>
+        <CardContent className="flex flex-wrap gap-3">
+          <a href="/api/admin/reports/export?type=deals" download>
+            <Button variant="outline" className="gap-2">
+              <Download className="h-4 w-4" />
+              Deals Report (CSV)
+            </Button>
+          </a>
+          <a href="/api/admin/reports/export?type=payouts" download>
+            <Button variant="outline" className="gap-2">
+              <Download className="h-4 w-4" />
+              Payouts Report (CSV)
+            </Button>
+          </a>
         </CardContent>
       </Card>
     </div>

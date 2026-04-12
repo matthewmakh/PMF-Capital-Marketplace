@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { isAdmin } from "@/lib/permissions";
-import { logAction } from "@/lib/audit";
+import { logAction, getRequestContext } from "@/lib/audit";
 import { distributePayment } from "@/lib/calculations/pro-rata";
 import { z } from "zod";
 import Decimal from "decimal.js";
@@ -78,7 +78,16 @@ export async function POST(
         if (existing) return { payment: existing, duplicate: true, beforeCollected: "", afterCollected: "" };
       }
 
-      const deal = await tx.deal.findUnique({ where: { id: dealId } });
+      // SELECT ... FOR UPDATE — acquire exclusive row lock to prevent concurrent
+      // payment posts from reading stale totalCollected values
+      const [deal] = await tx.$queryRawUnsafe<Array<{
+        id: string; status: string; totalCollected: number; paybackAmount: number;
+        firstPaymentAt: Date | null; fundedAmount: number;
+      }>>(
+        `SELECT id, status, "totalCollected", "paybackAmount", "firstPaymentAt", "fundedAmount"
+         FROM "Deal" WHERE id = $1 FOR UPDATE`,
+        dealId
+      );
       if (!deal) throw new Error("Deal not found");
 
       // Status guard — distributePayment also checks, but fail early with clear message
@@ -175,6 +184,7 @@ export async function POST(
         beforeCollected: result.beforeCollected,
         afterCollected: result.afterCollected,
       },
+      ...getRequestContext(req),
     });
 
     return NextResponse.json(result.payment, { status: 201 });

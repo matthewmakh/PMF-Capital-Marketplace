@@ -38,9 +38,12 @@ export function isEncrypted(value: string): boolean {
 }
 
 export function safeEncrypt(plaintext: string): string {
-  try { return encrypt(plaintext); } catch { return plaintext; }
+  // Encryption is mandatory for secrets. If it fails, crash loud — never store plaintext.
+  return encrypt(plaintext);
 }
 
 export function safeDecrypt(stored: string): string {
-  try { return isEncrypted(stored) ? decrypt(stored) : stored; } catch { return stored; }
+  // Support reading legacy unencrypted values (migration path), but always encrypt on write.
+  if (!isEncrypted(stored)) return stored;
+  return decrypt(stored);
 }

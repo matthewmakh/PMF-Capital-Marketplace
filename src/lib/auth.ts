@@ -4,6 +4,13 @@ import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 import { isMFARequired } from "./mfa";
 
+// Maximum age (in ms) for mfaVerifiedAt to be considered valid when updating JWT.
+// The /api/mfa/verify route sets mfaVerifiedAt in the DB; the JWT callback checks
+// that this timestamp is recent before flipping the token flag. This closes the
+// attack vector where a client calls updateSession({ mfaVerified: true }) without
+// actually completing MFA verification.
+const MFA_VERIFY_WINDOW_MS = 30_000; // 30 seconds
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   providers: [
@@ -66,12 +73,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.mfaRequired = user.mfaRequired;
         token.mfaVerified = user.mfaVerified;
       }
-      // Session update — used after MFA verification to set mfaVerified=true
-      if (trigger === "update" && session?.mfaVerified !== undefined) {
-        token.mfaVerified = session.mfaVerified;
+      // Session update — verify against DB before trusting mfaVerified
+      if (trigger === "update" && session?.mfaVerified === true) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { mfaVerifiedAt: true },
+        });
+        if (
+          dbUser?.mfaVerifiedAt &&
+          Date.now() - dbUser.mfaVerifiedAt.getTime() < MFA_VERIFY_WINDOW_MS
+        ) {
+          token.mfaVerified = true;
+        }
+        // If DB doesn't confirm recent MFA verification, ignore the client request
       }
       if (trigger === "update" && session?.mfaEnabled !== undefined) {
-        token.mfaEnabled = session.mfaEnabled;
+        // Verify mfaEnabled against DB too
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { mfaEnabled: true },
+        });
+        if (dbUser) {
+          token.mfaEnabled = dbUser.mfaEnabled;
+        }
       }
       return token;
     },

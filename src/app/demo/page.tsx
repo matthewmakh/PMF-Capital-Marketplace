@@ -6,7 +6,8 @@ import {
   SceneDealDetail, ScenePayment, ScenePortfolio,
   ScenePayouts, SceneSecurity, SceneClosing,
 } from "./scenes";
-import { Play, Pause, ChevronLeft, ChevronRight } from "lucide-react";
+import { Play, Pause, ChevronLeft, ChevronRight, ArrowLeftRight } from "lucide-react";
+import Link from "next/link";
 
 const SCENES = [
   { component: SceneHero, label: "Intro", caption: "" },
@@ -27,6 +28,15 @@ export default function DemoPage() {
 
   return (
     <div className="relative h-screen flex flex-col">
+      {/* Top-right demo switcher */}
+      <Link
+        href="/demo/underwriting"
+        className="fixed top-4 right-4 z-50 inline-flex items-center gap-1.5 rounded-full border border-navy-700/60 bg-navy-900/70 px-3 py-1.5 text-xs font-medium text-navy-300 hover:border-navy-500 hover:text-white transition-colors backdrop-blur-sm"
+      >
+        <ArrowLeftRight className="h-3 w-3" />
+        Underwriting Demo
+      </Link>
+
       {/* Scene content */}
       <div className="flex-1 overflow-hidden" style={{ paddingBottom: caption ? 140 : 80 }}>
         {SCENES.map(({ component: Scene }, i) => (

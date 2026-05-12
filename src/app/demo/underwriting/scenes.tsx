@@ -1471,13 +1471,24 @@ export function SceneBrokerIntake({ active }: { active: boolean }) {
 // ================================================================
 export function ScenePipelineDashboard({ active }: { active: boolean }) {
   const [slaPulse, setSlaPulse] = useState(false);
+  const [revealed, setRevealed] = useState(0);
   useEffect(() => {
     if (!active) {
       setSlaPulse(false);
+      setRevealed(0);
       return;
     }
-    const t = setTimeout(() => setSlaPulse(true), 3500);
-    return () => clearTimeout(t);
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    for (let i = 0; i < 6; i++) {
+      timers.push(
+        setTimeout(
+          () => setRevealed((r) => Math.max(r, i + 1)),
+          1500 + i * 150
+        )
+      );
+    }
+    timers.push(setTimeout(() => setSlaPulse(true), 3500));
+    return () => timers.forEach(clearTimeout);
   }, [active]);
 
   const rows = [
@@ -1608,50 +1619,51 @@ export function ScenePipelineDashboard({ active }: { active: boolean }) {
               </thead>
               <tbody>
                 {rows.map((row, i) => (
-                  <FadeIn key={i} show={active} delay={1500 + i * 150}>
-                    <tr
-                      className={`border-b border-navy-800/30 transition-colors duration-700 ${
-                        row.sla && slaPulse
-                          ? "bg-danger/10"
-                          : i === 0
-                            ? "bg-profit/5"
-                            : ""
-                      }`}
-                    >
-                      <td className="px-4 py-2 font-medium text-navy-100">
-                        {row.merchant}
-                        {i === 0 && (
-                          <span className="ml-2 rounded bg-profit/20 px-1.5 py-0.5 text-[9px] font-bold text-profit uppercase">
-                            New
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-2 py-2 text-navy-400 hidden sm:table-cell">
-                        {row.state}
-                      </td>
-                      <td className="px-2 py-2 text-right tabular-nums text-white">
-                        {row.amount}
-                      </td>
-                      <td className="px-2 py-2">
-                        <span
-                          className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${row.statusColor}`}
-                        >
-                          {row.status}
+                  <tr
+                    key={i}
+                    className={`border-b border-navy-800/30 transition-all duration-500 ${
+                      i < revealed ? "opacity-100" : "opacity-0"
+                    } ${
+                      row.sla && slaPulse
+                        ? "bg-danger/10"
+                        : i === 0
+                          ? "bg-profit/5"
+                          : ""
+                    }`}
+                  >
+                    <td className="px-4 py-2 font-medium text-navy-100">
+                      {row.merchant}
+                      {i === 0 && (
+                        <span className="ml-2 rounded bg-profit/20 px-1.5 py-0.5 text-[9px] font-bold text-profit uppercase">
+                          New
                         </span>
-                      </td>
-                      <td
-                        className={`px-2 py-2 text-right tabular-nums hidden sm:table-cell ${row.sla ? "text-danger font-semibold" : "text-navy-500"}`}
+                      )}
+                    </td>
+                    <td className="px-2 py-2 text-navy-400 hidden sm:table-cell">
+                      {row.state}
+                    </td>
+                    <td className="px-2 py-2 text-right tabular-nums text-white">
+                      {row.amount}
+                    </td>
+                    <td className="px-2 py-2">
+                      <span
+                        className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${row.statusColor}`}
                       >
-                        {row.sla && slaPulse && (
-                          <AlertTriangle className="inline h-3 w-3 mr-1 animate-pulse" />
-                        )}
-                        {row.age}
-                      </td>
-                      <td className="px-4 py-2 text-navy-400 hidden md:table-cell">
-                        {row.broker}
-                      </td>
-                    </tr>
-                  </FadeIn>
+                        {row.status}
+                      </span>
+                    </td>
+                    <td
+                      className={`px-2 py-2 text-right tabular-nums hidden sm:table-cell ${row.sla ? "text-danger font-semibold" : "text-navy-500"}`}
+                    >
+                      {row.sla && slaPulse && (
+                        <AlertTriangle className="inline h-3 w-3 mr-1 animate-pulse" />
+                      )}
+                      {row.age}
+                    </td>
+                    <td className="px-4 py-2 text-navy-400 hidden md:table-cell">
+                      {row.broker}
+                    </td>
+                  </tr>
                 ))}
               </tbody>
             </table>
@@ -2063,6 +2075,24 @@ export function SceneStateDisclosure({ active }: { active: boolean }) {
 // SCENE — PORTFOLIO INTELLIGENCE / ADMIN COMMAND CENTER
 // ================================================================
 export function ScenePortfolioIntelligence({ active }: { active: boolean }) {
+  const [revealed, setRevealed] = useState(0);
+  useEffect(() => {
+    if (!active) {
+      setRevealed(0);
+      return;
+    }
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    for (let i = 0; i < 4; i++) {
+      timers.push(
+        setTimeout(
+          () => setRevealed((r) => Math.max(r, i + 1)),
+          1600 + i * 200
+        )
+      );
+    }
+    return () => timers.forEach(clearTimeout);
+  }, [active]);
+
   const grades = [
     { grade: "A", defaultRate: 2, volume: "$1.4M", color: "bg-profit" },
     { grade: "B", defaultRate: 6, volume: "$1.5M", color: "bg-navy-400" },
@@ -2239,31 +2269,32 @@ export function ScenePortfolioIntelligence({ active }: { active: boolean }) {
                 </thead>
                 <tbody>
                   {brokers.map((b, i) => (
-                    <FadeIn key={b.name} show={active} delay={1600 + i * 200}>
-                      <tr
-                        className={`border-t border-navy-800/40 ${b.tone === "danger" ? "bg-danger/5" : ""}`}
+                    <tr
+                      key={b.name}
+                      className={`border-t border-navy-800/40 transition-opacity duration-500 ${
+                        i < revealed ? "opacity-100" : "opacity-0"
+                      } ${b.tone === "danger" ? "bg-danger/5" : ""}`}
+                    >
+                      <td className="px-2 py-1.5 text-navy-200 font-medium">
+                        {b.name}
+                      </td>
+                      <td className="px-2 py-1.5 text-right tabular-nums text-white">
+                        {b.vol}
+                      </td>
+                      <td className="px-2 py-1.5 text-right tabular-nums text-navy-300">
+                        {b.approve}%
+                      </td>
+                      <td
+                        className={`px-2 py-1.5 text-right tabular-nums font-semibold ${
+                          b.tone === "danger" ? "text-danger" : "text-navy-300"
+                        }`}
                       >
-                        <td className="px-2 py-1.5 text-navy-200 font-medium">
-                          {b.name}
-                        </td>
-                        <td className="px-2 py-1.5 text-right tabular-nums text-white">
-                          {b.vol}
-                        </td>
-                        <td className="px-2 py-1.5 text-right tabular-nums text-navy-300">
-                          {b.approve}%
-                        </td>
-                        <td
-                          className={`px-2 py-1.5 text-right tabular-nums font-semibold ${
-                            b.tone === "danger" ? "text-danger" : "text-navy-300"
-                          }`}
-                        >
-                          {b.default}%
-                          {b.tone === "danger" && (
-                            <TrendingUp className="inline h-3 w-3 ml-1" />
-                          )}
-                        </td>
-                      </tr>
-                    </FadeIn>
+                        {b.default}%
+                        {b.tone === "danger" && (
+                          <TrendingUp className="inline h-3 w-3 ml-1" />
+                        )}
+                      </td>
+                    </tr>
                   ))}
                 </tbody>
               </table>
@@ -2294,9 +2325,11 @@ export function ScenePortfolioIntelligence({ active }: { active: boolean }) {
 // ================================================================
 export function SceneAnomalyCatch({ active }: { active: boolean }) {
   const [revealed, setRevealed] = useState(0);
+  const [rowsRevealed, setRowsRevealed] = useState(0);
   useEffect(() => {
     if (!active) {
       setRevealed(0);
+      setRowsRevealed(0);
       return;
     }
     const timers: ReturnType<typeof setTimeout>[] = [];
@@ -2304,6 +2337,14 @@ export function SceneAnomalyCatch({ active }: { active: boolean }) {
     timers.push(setTimeout(() => setRevealed(2), 2300));
     timers.push(setTimeout(() => setRevealed(3), 3300));
     timers.push(setTimeout(() => setRevealed(4), 4200));
+    for (let i = 0; i < 3; i++) {
+      timers.push(
+        setTimeout(
+          () => setRowsRevealed((r) => Math.max(r, i + 1)),
+          1100 + i * 350
+        )
+      );
+    }
     return () => timers.forEach(clearTimeout);
   }, [active]);
 
@@ -2477,42 +2518,43 @@ export function SceneAnomalyCatch({ active }: { active: boolean }) {
                 </thead>
                 <tbody>
                   {applications.map((a, i) => (
-                    <FadeIn key={i} show={active} delay={1100 + i * 350}>
-                      <tr
-                        className={`border-t border-navy-800/30 ${i === 0 ? "bg-danger/10" : ""}`}
-                      >
-                        <td className="px-2 py-1.5 text-navy-300 tabular-nums">
-                          {a.when}
-                        </td>
-                        <td className="px-2 py-1.5 text-white font-medium truncate max-w-[140px]">
-                          {a.legal}
-                          {i === 0 && (
-                            <span className="ml-1.5 rounded bg-danger/20 px-1 py-0.5 text-[9px] font-bold text-danger uppercase">
-                              Now
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-2 py-1.5 text-navy-400 hidden sm:table-cell tabular-nums">
-                          {a.ein}
-                        </td>
-                        <td className="px-2 py-1.5 text-right tabular-nums text-white">
-                          {a.amount}
-                        </td>
-                        <td className="px-2 py-1.5">
-                          <span
-                            className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                              a.status === "Declined"
-                                ? "bg-danger/20 text-danger"
-                                : a.status === "Withdrawn"
-                                  ? "bg-navy-700 text-navy-300"
-                                  : "bg-warning/20 text-warning"
-                            }`}
-                          >
-                            {a.status}
+                    <tr
+                      key={i}
+                      className={`border-t border-navy-800/30 transition-opacity duration-500 ${
+                        i < rowsRevealed ? "opacity-100" : "opacity-0"
+                      } ${i === 0 ? "bg-danger/10" : ""}`}
+                    >
+                      <td className="px-2 py-1.5 text-navy-300 tabular-nums">
+                        {a.when}
+                      </td>
+                      <td className="px-2 py-1.5 text-white font-medium truncate max-w-[140px]">
+                        {a.legal}
+                        {i === 0 && (
+                          <span className="ml-1.5 rounded bg-danger/20 px-1 py-0.5 text-[9px] font-bold text-danger uppercase">
+                            Now
                           </span>
-                        </td>
-                      </tr>
-                    </FadeIn>
+                        )}
+                      </td>
+                      <td className="px-2 py-1.5 text-navy-400 hidden sm:table-cell tabular-nums">
+                        {a.ein}
+                      </td>
+                      <td className="px-2 py-1.5 text-right tabular-nums text-white">
+                        {a.amount}
+                      </td>
+                      <td className="px-2 py-1.5">
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                            a.status === "Declined"
+                              ? "bg-danger/20 text-danger"
+                              : a.status === "Withdrawn"
+                                ? "bg-navy-700 text-navy-300"
+                                : "bg-warning/20 text-warning"
+                          }`}
+                        >
+                          {a.status}
+                        </span>
+                      </td>
+                    </tr>
                   ))}
                 </tbody>
               </table>

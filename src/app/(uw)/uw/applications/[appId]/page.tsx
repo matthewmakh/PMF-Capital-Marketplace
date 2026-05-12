@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { UwStatusBadge } from "@/components/uw/shared/uw-status-badge";
 import { PaperGradeBadge } from "@/components/uw/shared/paper-grade-badge";
+import { TamperBadge } from "@/components/uw/shared/tamper-badge";
 import { CopyableLink } from "@/components/uw/shared/copyable-link";
 import { ActionButtons } from "@/components/uw/summary/action-buttons";
 import { DecisionPanel } from "@/components/uw/summary/decision-panel";
@@ -42,7 +43,10 @@ export default async function ApplicationDetailPage({
     where: { id: appId },
     include: {
       owners: { orderBy: { ownershipPct: "desc" } },
-      documents: { orderBy: { uploadedAt: "desc" } },
+      documents: {
+        orderBy: { uploadedAt: "desc" },
+        include: { tamperChecks: { orderBy: { createdAt: "desc" } } },
+      },
       bankAnalyses: { orderBy: { createdAt: "desc" }, take: 1 },
       vendorPulls: { orderBy: { pulledAt: "desc" } },
       decisions: { orderBy: { createdAt: "desc" }, take: 5 },
@@ -77,6 +81,66 @@ export default async function ApplicationDetailPage({
   const ucc = findPull<UccLienResult>("ucc_liens");
 
   const hasBankDocs = app.documents.some((d) => d.docType === "BANK_STATEMENT");
+
+  // Tamper summary: worst verdict across every bank-statement document.
+  const verdictRank = {
+    UNKNOWN: 0,
+    CLEAN: 1,
+    SUSPICIOUS: 2,
+    TAMPERED: 3,
+  } as const;
+  type Verdict = keyof typeof verdictRank;
+
+  interface DocTamperSummary {
+    docId: string;
+    filename: string;
+    verdict: Verdict;
+    riskScore: number;
+    topSignals: { code: string; severity: string; message: string }[];
+  }
+
+  const docTamperSummaries: DocTamperSummary[] = app.documents
+    .filter((d) => d.docType === "BANK_STATEMENT")
+    .map((d) => {
+      const checks = d.tamperChecks;
+      if (checks.length === 0) {
+        return {
+          docId: d.id,
+          filename: d.filename,
+          verdict: "UNKNOWN" as Verdict,
+          riskScore: 0,
+          topSignals: [],
+        };
+      }
+      const top = [...checks].sort((a, b) => b.riskScore - a.riskScore)[0];
+      const allSignals = checks.flatMap(
+        (c) =>
+          (c.signals as unknown as {
+            code: string;
+            severity: string;
+            message: string;
+          }[]) ?? []
+      );
+      const topSignals = allSignals
+        .filter((s) => s.severity === "high" || s.severity === "critical" || s.severity === "med")
+        .slice(0, 3);
+      return {
+        docId: d.id,
+        filename: d.filename,
+        verdict: top.verdict as Verdict,
+        riskScore: top.riskScore,
+        topSignals,
+      };
+    });
+
+  const worstVerdict: Verdict = docTamperSummaries.reduce<Verdict>(
+    (acc, s) => (verdictRank[s.verdict] > verdictRank[acc] ? s.verdict : acc),
+    "UNKNOWN"
+  );
+  const worstScore = docTamperSummaries.reduce(
+    (acc, s) => Math.max(acc, s.riskScore),
+    0
+  );
 
   return (
     <div>
@@ -406,6 +470,65 @@ export default async function ApplicationDetailPage({
           )}
         </CardContent>
       </Card>
+
+      {/* Document integrity */}
+      {docTamperSummaries.length > 0 && (
+        <Card
+          className={`mt-5 ${
+            worstVerdict === "TAMPERED"
+              ? "border-danger/30 bg-danger-light/20"
+              : worstVerdict === "SUSPICIOUS"
+                ? "border-warning/30 bg-warning-light/20"
+                : ""
+          }`}
+        >
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ShieldCheck className="h-4 w-4 text-navy-600" />
+              Document Integrity
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <TamperBadge verdict={worstVerdict} riskScore={worstScore} />
+              <Link
+                href={`/uw/applications/${app.id}/documents`}
+                className="text-xs font-medium text-navy-600 hover:text-navy-800"
+              >
+                Manage docs →
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent className="px-0">
+            <ul className="divide-y divide-border/40">
+              {docTamperSummaries.map((s) => (
+                <li
+                  key={s.docId}
+                  className="flex flex-col gap-1 px-5 py-2.5 sm:flex-row sm:items-start sm:justify-between"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-navy-800">
+                      {s.filename}
+                    </p>
+                    {s.topSignals.length > 0 && (
+                      <ul className="mt-0.5 space-y-0.5 text-[11px] text-warning">
+                        {s.topSignals.map((sig, i) => (
+                          <li key={i}>• {sig.message}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <TamperBadge verdict={s.verdict} riskScore={s.riskScore} />
+                </li>
+              ))}
+            </ul>
+            <p className="border-t border-border/40 px-5 py-2 text-[11px] text-steel-500">
+              Built-in PDF metadata inspector runs on every upload. Inscribe
+              (fraud-detection vendor) returns mock data until{" "}
+              <code className="rounded bg-steel-100 px-1">INSCRIBE_API_KEY</code>{" "}
+              is set.
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Actions + Decision */}
       <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">

@@ -79,6 +79,14 @@ enum AuditAction {
   UW_ANALYSIS_RUN
   UW_VENDOR_PULL
   UW_DECISION_MADE
+  UW_TAMPER_CHECK
+}
+
+enum TamperVerdict {
+  CLEAN
+  SUSPICIOUS
+  TAMPERED
+  UNKNOWN
 }
 
 enum UwAppStatus {
@@ -521,9 +529,29 @@ model UwDocument {
   uploadedBy   User?    @relation("UwDocUploader", fields: [uploadedById], references: [id])
   uploadedAt   DateTime @default(now())
 
+  tamperChecks UwTamperCheck[]
+
   @@index([applicationId])
   @@index([docType])
   @@map("uw_documents")
+}
+
+model UwTamperCheck {
+  id          String         @id @default(cuid())
+  documentId  String
+  document    UwDocument     @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  source      String                                    // "pdf_inspector" | "inscribe"
+  verdict     TamperVerdict  @default(UNKNOWN)
+  riskScore   Int                                       // 0 (clean) – 100 (definitely tampered)
+  signals     Json                                      // array of typed signal objects
+  rawJson     Json?
+  errorMessage String?
+
+  createdAt DateTime @default(now())
+
+  @@index([documentId, source])
+  @@map("uw_tamper_checks")
 }
 
 model UwBankAnalysis {

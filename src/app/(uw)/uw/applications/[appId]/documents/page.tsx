@@ -3,10 +3,20 @@ import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DocumentUploadZone } from "@/components/uw/documents/document-upload-zone";
+import { TamperBadge } from "@/components/uw/shared/tamper-badge";
+import { TamperRerunButton } from "@/components/uw/documents/tamper-rerun-button";
 import { UW_DOC_TYPE_LABELS } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
 import Link from "next/link";
 import { ArrowLeft, FileText } from "lucide-react";
+import type { TamperVerdict } from "@prisma/client";
+
+interface TamperSignalShape {
+  code: string;
+  severity: string;
+  message: string;
+  detail?: string;
+}
 
 export default async function ApplicationDocumentsPage({
   params,
@@ -19,11 +29,29 @@ export default async function ApplicationDocumentsPage({
     include: {
       documents: {
         orderBy: { uploadedAt: "desc" },
-        include: { uploadedBy: { select: { firstName: true, lastName: true } } },
+        include: {
+          uploadedBy: { select: { firstName: true, lastName: true } },
+          tamperChecks: { orderBy: { createdAt: "desc" } },
+        },
       },
     },
   });
   if (!app) notFound();
+
+  const summarize = (
+    checks: { source: string; verdict: TamperVerdict; riskScore: number; signals: unknown }[]
+  ): { verdict: TamperVerdict; riskScore: number; signals: TamperSignalShape[] } => {
+    if (checks.length === 0)
+      return { verdict: "UNKNOWN" as TamperVerdict, riskScore: 0, signals: [] };
+    const top = [...checks].sort((a, b) => b.riskScore - a.riskScore)[0];
+    return {
+      verdict: top.verdict,
+      riskScore: top.riskScore,
+      signals: checks.flatMap(
+        (c) => (c.signals as unknown as TamperSignalShape[]) ?? []
+      ),
+    };
+  };
 
   return (
     <div>
@@ -46,6 +74,11 @@ export default async function ApplicationDocumentsPage({
         </CardHeader>
         <CardContent>
           <DocumentUploadZone apiBase={`/api/uw/applications/${appId}`} />
+          <p className="mt-3 text-[11px] text-steel-500">
+            Every bank-statement PDF is automatically scanned for tampering on
+            upload (PDF metadata + Inscribe). Re-run any check from the table
+            below.
+          </p>
         </CardContent>
       </Card>
 
@@ -63,25 +96,50 @@ export default async function ApplicationDocumentsPage({
             </div>
           ) : (
             <ul className="divide-y divide-border/40">
-              {app.documents.map((d) => (
-                <li
-                  key={d.id}
-                  className="flex flex-col gap-1 px-5 py-3 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-navy-800">
-                      {d.filename}
-                    </p>
-                    <p className="text-[11px] text-steel-500">
-                      {UW_DOC_TYPE_LABELS[d.docType]} ·{" "}
-                      {Math.round(d.sizeBytes / 1024)}&nbsp;KB ·{" "}
-                      {formatDate(d.uploadedAt)}
-                      {d.uploadedBy &&
-                        ` · ${d.uploadedBy.firstName} ${d.uploadedBy.lastName}`}
-                    </p>
-                  </div>
-                </li>
-              ))}
+              {app.documents.map((d) => {
+                const summary = summarize(d.tamperChecks);
+                const isBank = d.docType === "BANK_STATEMENT";
+                const topSignals = summary.signals
+                  .filter((s) => s.severity !== "info")
+                  .slice(0, 3);
+                return (
+                  <li
+                    key={d.id}
+                    className="flex flex-col gap-2 px-5 py-3 sm:flex-row sm:items-start sm:justify-between"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-navy-800">
+                        {d.filename}
+                      </p>
+                      <p className="text-[11px] text-steel-500">
+                        {UW_DOC_TYPE_LABELS[d.docType]} ·{" "}
+                        {Math.round(d.sizeBytes / 1024)}&nbsp;KB ·{" "}
+                        {formatDate(d.uploadedAt)}
+                        {d.uploadedBy &&
+                          ` · ${d.uploadedBy.firstName} ${d.uploadedBy.lastName}`}
+                      </p>
+                      {isBank && topSignals.length > 0 && (
+                        <ul className="mt-1.5 space-y-0.5 text-[11px]">
+                          {topSignals.map((s, i) => (
+                            <li key={i} className="text-warning">
+                              • {s.message}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                    {isBank && (
+                      <div className="flex items-center gap-2">
+                        <TamperBadge
+                          verdict={summary.verdict}
+                          riskScore={summary.riskScore}
+                        />
+                        <TamperRerunButton appId={appId} docId={d.id} />
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </CardContent>

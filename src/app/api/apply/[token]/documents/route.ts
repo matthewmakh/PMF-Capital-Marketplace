@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { registerDocSchema } from "@/lib/uw/validation";
 import { logAction, getRequestContext } from "@/lib/audit";
+import { runTamperChecks } from "@/lib/uw/tamper/composite";
 
 export async function POST(
   req: Request,
@@ -48,6 +49,13 @@ export async function POST(
     ipAddress: ctx.ipAddress,
     userAgent: ctx.userAgent,
   });
+
+  if (
+    parsed.data.docType === "BANK_STATEMENT" &&
+    parsed.data.contentType.includes("pdf")
+  ) {
+    void runTamperChecks({ documentId: doc.id }).catch(() => {});
+  }
 
   return NextResponse.json({ id: doc.id });
 }

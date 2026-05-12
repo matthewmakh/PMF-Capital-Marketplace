@@ -4,6 +4,7 @@ import { isMicrobiltConfigured } from "./microbilt";
 import { isUccConfigured } from "./ucc";
 import { isPlaidConfigured } from "../statements/plaid-statements";
 import { isAzureDocIntelConfigured } from "../statements/azure-doc-intel";
+import { isInscribeConfigured } from "../tamper/inscribe";
 import { isS3Configured } from "../storage/s3";
 
 export interface VendorStatus {
@@ -36,6 +37,14 @@ export function vendorStatuses(): VendorStatus[] {
       purpose: "Bank-statement PDF OCR (prebuilt-bankStatement.us)",
       envVars: ["AZURE_DOC_INTEL_ENDPOINT", "AZURE_DOC_INTEL_KEY"],
       configured: isAzureDocIntelConfigured(),
+    },
+    {
+      key: "inscribe",
+      label: "Inscribe (Document Tamper Detection)",
+      purpose:
+        "Industry-grade fraud detection on uploaded bank-statement PDFs (complements built-in inspector)",
+      envVars: ["INSCRIBE_API_KEY", "INSCRIBE_BASE_URL"],
+      configured: isInscribeConfigured(),
     },
     {
       key: "microbilt",

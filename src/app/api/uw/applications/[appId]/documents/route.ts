@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUnderwriter } from "@/lib/uw/permissions";
 import { registerDocSchema } from "@/lib/uw/validation";
 import { logAction, getRequestContext } from "@/lib/audit";
+import { runTamperChecks } from "@/lib/uw/tamper/composite";
 
 export async function POST(
   req: Request,
@@ -54,6 +55,17 @@ export async function POST(
     ipAddress: ctx.ipAddress,
     userAgent: ctx.userAgent,
   });
+
+  // Fire-and-forget tamper detection on PDF bank statements.
+  if (
+    parsed.data.docType === "BANK_STATEMENT" &&
+    parsed.data.contentType.includes("pdf")
+  ) {
+    void runTamperChecks({ documentId: doc.id }).catch(() => {
+      // Failures here shouldn't block upload acknowledgment; they're stored
+      // as the tamper check rows themselves when they do succeed.
+    });
+  }
 
   return NextResponse.json({ id: doc.id });
 }

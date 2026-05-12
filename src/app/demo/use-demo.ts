@@ -1,9 +1,9 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 
-const SCENE_DURATIONS = [5000, 7000, 8000, 7000, 8000, 9000, 7000, 7000, 6000, 7000];
+const DEFAULT_DURATIONS = [5000, 7000, 8000, 7000, 8000, 9000, 7000, 7000, 6000, 7000];
 
-export function useDemo(totalScenes: number) {
+export function useDemo(totalScenes: number, durations?: number[]) {
   const [scene, setScene] = useState(0);
   const [playing, setPlaying] = useState(true);
   const [sceneProgress, setSceneProgress] = useState(0);
@@ -15,7 +15,8 @@ export function useDemo(totalScenes: number) {
 
   useEffect(() => {
     if (!playing || scene >= totalScenes - 1) return;
-    const duration = SCENE_DURATIONS[scene] || 6000;
+    const table = durations ?? DEFAULT_DURATIONS;
+    const duration = table[scene] || 6000;
     const interval = 50;
     let elapsed = 0;
     const timer = setInterval(() => {
@@ -24,7 +25,7 @@ export function useDemo(totalScenes: number) {
       if (elapsed >= duration) { clearInterval(timer); setScene((s) => s + 1); setSceneProgress(0); }
     }, interval);
     return () => clearInterval(timer);
-  }, [scene, playing, totalScenes]);
+  }, [scene, playing, totalScenes, durations]);
 
   return { scene, playing, sceneProgress, goTo, next, prev, togglePlay };
 }

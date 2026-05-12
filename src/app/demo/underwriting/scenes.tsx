@@ -12,6 +12,7 @@ import {
   Activity,
   AlertTriangle,
   TrendingDown,
+  TrendingUp,
   Building2,
   CheckCircle2,
   Clock,
@@ -25,6 +26,18 @@ import {
   KeyRound,
   Eye,
   Workflow,
+  Mail,
+  Inbox,
+  Send,
+  ArrowRight,
+  AlertOctagon,
+  Network,
+  Stamp,
+  Award,
+  Briefcase,
+  ClipboardList,
+  BarChart3,
+  Users,
 } from "lucide-react";
 
 // ================================================================
@@ -1320,6 +1333,1206 @@ export function SceneClosing({ active }: { active: boolean }) {
       <FadeIn show={active} delay={3000}>
         <p className="mt-8 text-xs text-navy-500">
           PMF Capital · MCA Underwriting Platform
+        </p>
+      </FadeIn>
+    </div>
+  );
+}
+
+// ================================================================
+// SCENE — BROKER EMAIL INTAKE
+// ================================================================
+export function SceneBrokerIntake({ active }: { active: boolean }) {
+  return (
+    <div className="px-6 sm:px-10 py-7 max-w-5xl mx-auto">
+      <FadeIn show={active} delay={0}>
+        <p className="text-xs uppercase tracking-widest text-navy-400 mb-1">
+          Broker Intake
+        </p>
+        <h2 className="text-2xl font-bold text-white mb-6">
+          Deals arrive by email. Pipeline updates itself.
+        </h2>
+      </FadeIn>
+
+      <div className="grid sm:grid-cols-[1fr_auto_1fr] gap-4 items-center">
+        {/* Incoming email */}
+        <SlideIn show={active} delay={300} direction="left">
+          <div className="rounded-xl bg-navy-900/80 border border-navy-700/50 overflow-hidden">
+            <div className="bg-navy-800/50 px-4 py-2.5 border-b border-navy-700/30 flex items-center gap-2">
+              <Mail className="h-4 w-4 text-navy-400" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-white truncate">
+                  New deal — Sunrise Auto Body LLC
+                </p>
+                <p className="text-[11px] text-navy-500 truncate">
+                  From: broker@meridianfunding.com
+                </p>
+              </div>
+            </div>
+            <div className="px-4 py-3 text-xs text-navy-300 leading-relaxed bg-navy-900">
+              <p>Hi underwriting,</p>
+              <p className="mt-2">Submitting a new file for review:</p>
+              <p className="mt-2">
+                <span className="text-white font-medium">Merchant:</span>{" "}
+                Sunrise Auto Body LLC
+                <br />
+                <span className="text-white font-medium">EIN:</span> 12-3456789
+                <br />
+                <span className="text-white font-medium">Requested:</span>{" "}
+                $50,000
+                <br />
+                <span className="text-white font-medium">Owner:</span> Carlos
+                Reyes (100%)
+                <br />
+                <span className="text-white font-medium">Contact:</span>{" "}
+                carlos@sunriseautobody.com
+              </p>
+              <p className="mt-2 text-navy-500">
+                Statements + ID attached. Thanks.
+              </p>
+            </div>
+          </div>
+        </SlideIn>
+
+        {/* Arrow + auto-parse pill */}
+        <FadeIn show={active} delay={900}>
+          <div className="flex flex-col items-center gap-2">
+            <div className="flex items-center gap-1.5 rounded-full bg-navy-800 border border-navy-700/60 px-3 py-1">
+              <Inbox className="h-3.5 w-3.5 text-navy-300" />
+              <span className="text-[11px] text-navy-300 font-medium">
+                Auto-parsed
+              </span>
+            </div>
+            <ArrowRight className="h-5 w-5 text-navy-500" />
+          </div>
+        </FadeIn>
+
+        {/* Parsed app card */}
+        <SlideIn show={active} delay={1100} direction="right">
+          <div className="rounded-xl bg-navy-900/80 border border-navy-700/50 overflow-hidden">
+            <div className="bg-navy-800/50 px-4 py-2.5 border-b border-navy-700/30 flex items-center justify-between">
+              <p className="text-xs uppercase tracking-wider text-navy-400">
+                New Application
+              </p>
+              <span className="rounded-full bg-navy-700 px-2 py-0.5 text-[10px] font-bold text-navy-200">
+                INTAKE
+              </span>
+            </div>
+            <div className="px-4 py-3 text-xs">
+              {[
+                { l: "Merchant", v: "Sunrise Auto Body LLC", d: 1400 },
+                { l: "EIN", v: "12-3456789", d: 1600 },
+                { l: "Owner", v: "Carlos Reyes (100%)", d: 1800 },
+                { l: "Requested", v: "$50,000", d: 2000 },
+                { l: "Contact", v: "carlos@sunriseautobody.com", d: 2200 },
+              ].map((row, i) => (
+                <FadeIn key={i} show={active} delay={row.d}>
+                  <div className="flex justify-between py-1.5 border-b border-navy-800/40 last:border-0">
+                    <span className="text-navy-500">{row.l}</span>
+                    <span className="font-medium text-white truncate ml-3">
+                      {row.v}
+                    </span>
+                  </div>
+                </FadeIn>
+              ))}
+            </div>
+          </div>
+        </SlideIn>
+      </div>
+
+      {/* Auto-emit merchant portal link */}
+      <FadeIn show={active} delay={2700}>
+        <div className="mt-5 rounded-xl border border-profit/30 bg-profit/5 px-5 py-3 flex items-center gap-3">
+          <Send className="h-4 w-4 text-profit shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-profit">
+              Portal link auto-sent to merchant
+            </p>
+            <code className="block mt-0.5 truncate text-[11px] text-navy-300 font-mono">
+              pmf.capital/apply/sR8nT2vWk9pQbAxLcMfGd
+            </code>
+          </div>
+          <CheckCircle2 className="h-4 w-4 text-profit shrink-0" />
+        </div>
+      </FadeIn>
+
+      <FadeIn show={active} delay={3300}>
+        <p className="text-sm text-navy-400 text-center mt-5">
+          Broker email → parsed application → merchant link sent. No keyboard
+          touched.
+        </p>
+      </FadeIn>
+    </div>
+  );
+}
+
+// ================================================================
+// SCENE — PIPELINE DASHBOARD
+// ================================================================
+export function ScenePipelineDashboard({ active }: { active: boolean }) {
+  const [slaPulse, setSlaPulse] = useState(false);
+  useEffect(() => {
+    if (!active) {
+      setSlaPulse(false);
+      return;
+    }
+    const t = setTimeout(() => setSlaPulse(true), 3500);
+    return () => clearTimeout(t);
+  }, [active]);
+
+  const rows = [
+    {
+      merchant: "Sunrise Auto Body LLC",
+      state: "NY",
+      amount: "$50K",
+      status: "INTAKE",
+      statusColor: "bg-navy-700 text-navy-200",
+      age: "Just now",
+      broker: "Meridian",
+    },
+    {
+      merchant: "Greenfield Medical Supply",
+      state: "MA",
+      amount: "$60K",
+      status: "DOCS PENDING",
+      statusColor: "bg-warning/20 text-warning",
+      age: "2h",
+      broker: "Atlas",
+    },
+    {
+      merchant: "Bella's Italian Kitchen",
+      state: "NJ",
+      amount: "$35K",
+      status: "ANALYZING",
+      statusColor: "bg-navy-500/30 text-navy-200",
+      age: "4h",
+      broker: "Pinnacle",
+    },
+    {
+      merchant: "Metro Quick Mart",
+      state: "NY",
+      amount: "$25K",
+      status: "UNDER REVIEW",
+      statusColor: "bg-navy-500/30 text-navy-200",
+      age: "1d · SLA",
+      broker: "Meridian",
+      sla: true,
+    },
+    {
+      merchant: "Hudson Logistics Inc",
+      state: "NJ",
+      amount: "$120K",
+      status: "UNDER REVIEW",
+      statusColor: "bg-navy-500/30 text-navy-200",
+      age: "6h",
+      broker: "Atlas",
+    },
+    {
+      merchant: "Coastal Marine Repair",
+      state: "FL",
+      amount: "$40K",
+      status: "APPROVED",
+      statusColor: "bg-profit/20 text-profit",
+      age: "Today",
+      broker: "Pinnacle",
+    },
+  ];
+
+  return (
+    <div className="px-6 sm:px-10 py-7 max-w-5xl mx-auto">
+      <FadeIn show={active} delay={0}>
+        <p className="text-xs uppercase tracking-widest text-navy-400 mb-1">
+          Underwriting Pipeline
+        </p>
+        <h2 className="text-2xl font-bold text-white mb-5">
+          Every file. Every stage. One screen.
+        </h2>
+      </FadeIn>
+
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
+        {[
+          { label: "MTD volume", value: 4_200_000, prefix: "$", delay: 300 },
+          { label: "Apps this month", value: 47, delay: 450 },
+          { label: "In intake", value: 12, delay: 600 },
+          { label: "Under review", value: 8, delay: 750 },
+          { label: "Decided today", value: 3, delay: 900 },
+        ].map((s, i) => (
+          <SlideIn key={i} show={active} delay={s.delay}>
+            <div className="rounded-xl bg-navy-900/80 border border-navy-700/50 p-3">
+              <p className="text-[10px] uppercase tracking-wider text-navy-500">
+                {s.label}
+              </p>
+              <p className="mt-1 text-xl font-bold tabular-nums text-white">
+                <CountUp
+                  end={s.value}
+                  prefix={s.prefix || ""}
+                  show={active}
+                  delay={s.delay + 200}
+                />
+              </p>
+            </div>
+          </SlideIn>
+        ))}
+      </div>
+
+      <SlideIn show={active} delay={1200}>
+        <div className="rounded-xl bg-navy-900/80 border border-navy-700/50 overflow-hidden">
+          <div className="bg-navy-800/50 px-4 py-2.5 border-b border-navy-700/30 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ClipboardList className="h-4 w-4 text-navy-300" />
+              <p className="text-sm font-semibold text-white">
+                Active Applications
+              </p>
+            </div>
+            <span className="text-[11px] text-navy-500">
+              Sorted by recency
+            </span>
+          </div>
+          <div className="overflow-hidden">
+            <table className="w-full text-xs">
+              <thead className="text-[10px] text-navy-500 uppercase tracking-wider">
+                <tr className="border-b border-navy-700/30">
+                  <th className="text-left px-4 py-2">Merchant</th>
+                  <th className="text-left px-2 py-2 hidden sm:table-cell">
+                    State
+                  </th>
+                  <th className="text-right px-2 py-2">Requested</th>
+                  <th className="text-left px-2 py-2">Status</th>
+                  <th className="text-right px-2 py-2 hidden sm:table-cell">
+                    Age
+                  </th>
+                  <th className="text-left px-4 py-2 hidden md:table-cell">
+                    Broker
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row, i) => (
+                  <FadeIn key={i} show={active} delay={1500 + i * 150}>
+                    <tr
+                      className={`border-b border-navy-800/30 transition-colors duration-700 ${
+                        row.sla && slaPulse
+                          ? "bg-danger/10"
+                          : i === 0
+                            ? "bg-profit/5"
+                            : ""
+                      }`}
+                    >
+                      <td className="px-4 py-2 font-medium text-navy-100">
+                        {row.merchant}
+                        {i === 0 && (
+                          <span className="ml-2 rounded bg-profit/20 px-1.5 py-0.5 text-[9px] font-bold text-profit uppercase">
+                            New
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-2 py-2 text-navy-400 hidden sm:table-cell">
+                        {row.state}
+                      </td>
+                      <td className="px-2 py-2 text-right tabular-nums text-white">
+                        {row.amount}
+                      </td>
+                      <td className="px-2 py-2">
+                        <span
+                          className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${row.statusColor}`}
+                        >
+                          {row.status}
+                        </span>
+                      </td>
+                      <td
+                        className={`px-2 py-2 text-right tabular-nums hidden sm:table-cell ${row.sla ? "text-danger font-semibold" : "text-navy-500"}`}
+                      >
+                        {row.sla && slaPulse && (
+                          <AlertTriangle className="inline h-3 w-3 mr-1 animate-pulse" />
+                        )}
+                        {row.age}
+                      </td>
+                      <td className="px-4 py-2 text-navy-400 hidden md:table-cell">
+                        {row.broker}
+                      </td>
+                    </tr>
+                  </FadeIn>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </SlideIn>
+
+      <FadeIn show={active} delay={4200}>
+        <p className="text-sm text-navy-400 text-center mt-5">
+          SLA breaches surface themselves. Brokers, status, aging — all live.
+        </p>
+      </FadeIn>
+    </div>
+  );
+}
+
+// ================================================================
+// SCENE — PRICING / OFFER GRID ENGINE
+// ================================================================
+export function ScenePricingEngine({ active }: { active: boolean }) {
+  const [tier, setTier] = useState(0); // how many tiers revealed
+
+  useEffect(() => {
+    if (!active) {
+      setTier(0);
+      return;
+    }
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    timers.push(setTimeout(() => setTier(1), 1600));
+    timers.push(setTimeout(() => setTier(2), 2400));
+    timers.push(setTimeout(() => setTier(3), 3200));
+    return () => timers.forEach(clearTimeout);
+  }, [active]);
+
+  const offers = [
+    {
+      label: "Conservative",
+      net: 30_000,
+      factor: 1.45,
+      term: 4,
+      holdback: 15,
+      daily: 369,
+      payback: 43_500,
+      tone: "navy",
+    },
+    {
+      label: "Standard",
+      net: 35_000,
+      factor: 1.42,
+      term: 5,
+      holdback: 12,
+      daily: 365,
+      payback: 49_700,
+      tone: "profit",
+      highlight: true,
+    },
+    {
+      label: "Aggressive",
+      net: 40_000,
+      factor: 1.38,
+      term: 6,
+      holdback: 10,
+      daily: 348,
+      payback: 55_200,
+      tone: "warning",
+    },
+  ];
+
+  // Factor-rate curve points (grade → factor)
+  const curve = [
+    { grade: "A", factor: 1.18 },
+    { grade: "B", factor: 1.28 },
+    { grade: "C", factor: 1.42, current: true },
+    { grade: "D", factor: 1.5 },
+  ];
+
+  return (
+    <div className="px-6 sm:px-10 py-6 max-w-5xl mx-auto">
+      <FadeIn show={active} delay={0}>
+        <p className="text-xs uppercase tracking-widest text-navy-400 mb-1">
+          Pricing Engine
+        </p>
+        <h2 className="text-2xl font-bold text-white mb-4">
+          From grade to offers — automatically
+        </h2>
+      </FadeIn>
+
+      {/* Input strip */}
+      <SlideIn show={active} delay={300}>
+        <div className="rounded-xl bg-navy-900/80 border border-navy-700/50 px-5 py-3 mb-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+          <div>
+            <p className="text-[10px] uppercase text-navy-500">Grade</p>
+            <p className="mt-0.5 font-bold text-warning">C paper</p>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase text-navy-500">TIB</p>
+            <p className="mt-0.5 font-bold text-white">32 months</p>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase text-navy-500">True rev/mo</p>
+            <p className="mt-0.5 font-bold text-white tabular-nums">$39,400</p>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase text-navy-500">Open MCAs</p>
+            <p className="mt-0.5 font-bold text-danger">3</p>
+          </div>
+        </div>
+      </SlideIn>
+
+      {/* 3 offer cards */}
+      <div className="grid sm:grid-cols-3 gap-3 mb-4">
+        {offers.map((o, i) => {
+          const visible = tier > i;
+          const toneClass =
+            o.tone === "profit"
+              ? "border-profit/40 bg-profit/5"
+              : o.tone === "warning"
+                ? "border-warning/40 bg-warning/5"
+                : "border-navy-700/50 bg-navy-900/80";
+          return (
+            <div
+              key={i}
+              className={`rounded-xl border overflow-hidden transition-all duration-700 ${toneClass} ${
+                visible
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-4 pointer-events-none"
+              }`}
+            >
+              <div className="px-4 py-2.5 border-b border-navy-700/30 flex items-center justify-between">
+                <p className="text-xs font-bold text-white uppercase tracking-wider">
+                  {o.label}
+                </p>
+                {o.highlight && (
+                  <span className="rounded-full bg-profit/20 px-2 py-0.5 text-[9px] font-bold text-profit">
+                    Recommended
+                  </span>
+                )}
+              </div>
+              <div className="px-4 py-3">
+                <div className="flex items-baseline gap-2 mb-3">
+                  <p className="text-2xl font-bold tabular-nums text-white">
+                    ${(o.net / 1000).toFixed(0)}K
+                  </p>
+                  <p className="text-[11px] text-navy-500">funded</p>
+                </div>
+                <div className="grid grid-cols-2 gap-y-1.5 text-[11px]">
+                  <div>
+                    <p className="text-navy-500">Factor</p>
+                    <p className="font-semibold text-white tabular-nums">
+                      {o.factor.toFixed(2)}×
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-navy-500">Term</p>
+                    <p className="font-semibold text-white tabular-nums">
+                      {o.term} mo
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-navy-500">Holdback</p>
+                    <p className="font-semibold text-white tabular-nums">
+                      {o.holdback}%
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-navy-500">Daily ACH</p>
+                    <p className="font-semibold text-white tabular-nums">
+                      ${o.daily}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-3 pt-2 border-t border-navy-800/40 flex justify-between text-[11px]">
+                  <span className="text-navy-500">Total payback</span>
+                  <span className="font-bold text-white tabular-nums">
+                    ${o.payback.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Factor-rate curve */}
+      <FadeIn show={active} delay={3700}>
+        <div className="rounded-xl bg-navy-900/80 border border-navy-700/50 px-5 py-3">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-navy-300" />
+              <p className="text-xs font-semibold uppercase tracking-wider text-navy-300">
+                Factor-rate curve · by paper grade
+              </p>
+            </div>
+            <span className="text-[10px] text-navy-500">
+              Calibrated to your historical loss rates
+            </span>
+          </div>
+          <div className="grid grid-cols-4 gap-2">
+            {curve.map((c, i) => (
+              <div
+                key={c.grade}
+                className={`rounded-lg px-3 py-2 transition-all duration-700 ${
+                  c.current
+                    ? "bg-warning/15 border border-warning/40"
+                    : "bg-navy-800/40 border border-navy-700/40"
+                }`}
+                style={{ transitionDelay: `${i * 100}ms` }}
+              >
+                <p
+                  className={`text-[10px] uppercase font-bold ${c.current ? "text-warning" : "text-navy-500"}`}
+                >
+                  {c.grade}
+                </p>
+                <p
+                  className={`text-base font-bold tabular-nums ${c.current ? "text-warning" : "text-navy-200"}`}
+                >
+                  {c.factor.toFixed(2)}×
+                </p>
+                {c.current && (
+                  <p className="text-[9px] uppercase tracking-wider text-warning mt-0.5">
+                    This deal
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </FadeIn>
+
+      <FadeIn show={active} delay={4500}>
+        <p className="text-sm text-navy-400 text-center mt-4">
+          Three offers, instantly. Underwriter picks one. Merchant gets a
+          contract.
+        </p>
+      </FadeIn>
+    </div>
+  );
+}
+
+// ================================================================
+// SCENE — STATE DISCLOSURE & COMPLIANCE
+// ================================================================
+export function SceneStateDisclosure({ active }: { active: boolean }) {
+  const [stamp, setStamp] = useState(false);
+  useEffect(() => {
+    if (!active) {
+      setStamp(false);
+      return;
+    }
+    const t = setTimeout(() => setStamp(true), 3800);
+    return () => clearTimeout(t);
+  }, [active]);
+
+  const regulated = [
+    { code: "CA", name: "California", law: "SB 1235", x: 12, y: 56 },
+    { code: "NY", name: "New York", law: "CFDL", x: 84, y: 38 },
+    { code: "UT", name: "Utah", law: "CFR", x: 28, y: 50 },
+    { code: "VA", name: "Virginia", law: "SBF", x: 79, y: 52 },
+    { code: "CT", name: "Connecticut", law: "CFD", x: 88, y: 36 },
+  ];
+
+  return (
+    <div className="px-6 sm:px-10 py-6 max-w-5xl mx-auto">
+      <FadeIn show={active} delay={0}>
+        <p className="text-xs uppercase tracking-widest text-navy-400 mb-1">
+          State Compliance
+        </p>
+        <h2 className="text-2xl font-bold text-white mb-4">
+          You can&apos;t fund in NY without this. We do it automatically.
+        </h2>
+      </FadeIn>
+
+      <div className="grid sm:grid-cols-[1fr_1fr] gap-4">
+        {/* Animated map area */}
+        <SlideIn show={active} delay={300} direction="left">
+          <div className="rounded-xl bg-navy-900/80 border border-navy-700/50 overflow-hidden">
+            <div className="bg-navy-800/50 px-4 py-2.5 border-b border-navy-700/30 flex items-center gap-2">
+              <Network className="h-4 w-4 text-navy-300" />
+              <p className="text-sm font-semibold text-white">
+                Regulated states
+              </p>
+            </div>
+            <div className="relative px-4 py-4 h-56 bg-gradient-to-br from-navy-900 to-navy-950">
+              {/* simplified continental outline (stylized blob) */}
+              <svg
+                viewBox="0 0 100 70"
+                className="absolute inset-0 w-full h-full opacity-60"
+              >
+                <path
+                  d="M5 25 Q 15 12, 35 14 Q 55 8, 75 14 Q 92 16, 95 35 Q 92 52, 80 60 Q 60 65, 40 60 Q 20 58, 8 50 Q 2 40, 5 25 Z"
+                  fill="none"
+                  stroke="#273f63"
+                  strokeWidth="0.4"
+                />
+              </svg>
+              {regulated.map((s, i) => (
+                <FadeIn key={s.code} show={active} delay={600 + i * 350}>
+                  <div
+                    className="absolute -translate-x-1/2 -translate-y-1/2"
+                    style={{ left: `${s.x}%`, top: `${s.y}%` }}
+                  >
+                    <div className="relative flex items-center justify-center">
+                      <div className="absolute h-5 w-5 rounded-full bg-warning/30 animate-pulse" />
+                      <div className="relative h-2.5 w-2.5 rounded-full bg-warning ring-2 ring-warning/40" />
+                    </div>
+                    <div className="absolute left-1/2 -translate-x-1/2 mt-1 whitespace-nowrap">
+                      <span className="rounded bg-navy-800/90 border border-warning/30 px-1.5 py-0.5 text-[9px] font-bold text-warning">
+                        {s.code} · {s.law}
+                      </span>
+                    </div>
+                  </div>
+                </FadeIn>
+              ))}
+
+              <FadeIn show={active} delay={2600}>
+                <div className="absolute bottom-2 left-2 right-2 rounded-md bg-navy-800/70 border border-navy-700/40 px-2 py-1.5 flex items-center gap-2">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-profit shrink-0" />
+                  <p className="text-[10px] text-navy-200">
+                    Merchant state{" "}
+                    <span className="font-bold text-white">NY</span> matched —
+                    NY Commercial Financial Disclosure Law applies
+                  </p>
+                </div>
+              </FadeIn>
+            </div>
+          </div>
+        </SlideIn>
+
+        {/* Generated disclosure PDF */}
+        <SlideIn show={active} delay={500} direction="right">
+          <div className="rounded-xl bg-white shadow-2xl shadow-navy-950 overflow-hidden">
+            <div className="bg-navy-800 px-4 py-2 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileText className="h-3.5 w-3.5 text-navy-300" />
+                <p className="text-[11px] text-navy-200">
+                  NY_Disclosure_Sunrise.pdf
+                </p>
+              </div>
+              <span className="text-[10px] text-navy-500">Auto-generated</span>
+            </div>
+            <div className="relative p-4 bg-white text-navy-900 text-[10px] leading-relaxed">
+              <p className="text-center font-bold text-navy-900 text-xs mb-2">
+                COMMERCIAL FINANCING DISCLOSURE
+              </p>
+              <p className="text-center text-[9px] text-steel-600 mb-3 uppercase tracking-wider">
+                State of New York · CFDL §801
+              </p>
+              <div className="space-y-1 text-[10px]">
+                {[
+                  { l: "Amount financed", v: "$35,000.00", d: 1400 },
+                  { l: "Total disbursed to recipient", v: "$35,000.00", d: 1600 },
+                  { l: "Finance charge", v: "$14,700.00", d: 1800 },
+                  { l: "Total payback", v: "$49,700.00", d: 2000 },
+                  { l: "Estimated term", v: "5 months (≈109 ACH debits)", d: 2200 },
+                  {
+                    l: "APR-equivalent",
+                    v: "94.2%",
+                    d: 2400,
+                    bold: true,
+                  },
+                  { l: "Avg daily payment", v: "$365.00", d: 2600 },
+                  { l: "Prepayment", v: "No discount", d: 2800 },
+                ].map((row, i) => (
+                  <FadeIn key={i} show={active} delay={row.d}>
+                    <div className="flex justify-between border-b border-steel-100 py-0.5">
+                      <span className="text-steel-700">{row.l}</span>
+                      <span
+                        className={`tabular-nums ${row.bold ? "font-bold text-navy-900" : "text-navy-800 font-medium"}`}
+                      >
+                        {row.v}
+                      </span>
+                    </div>
+                  </FadeIn>
+                ))}
+              </div>
+
+              {/* Stamp */}
+              <div
+                className={`absolute right-3 bottom-3 rotate-[-12deg] transition-all duration-700 ${
+                  stamp
+                    ? "opacity-100 scale-100"
+                    : "opacity-0 scale-150 pointer-events-none"
+                }`}
+              >
+                <div className="rounded-md border-2 border-profit px-3 py-1.5 bg-profit/5">
+                  <div className="flex items-center gap-1">
+                    <Stamp className="h-3 w-3 text-profit" />
+                    <p className="text-[9px] font-bold text-profit uppercase tracking-wider">
+                      NY CFDL · OK
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </SlideIn>
+      </div>
+
+      <FadeIn show={active} delay={4400}>
+        <p className="text-sm text-navy-400 text-center mt-4">
+          CA SB 1235 · NY CFDL · UT · VA · CT — generated on every offer.
+        </p>
+      </FadeIn>
+    </div>
+  );
+}
+
+// ================================================================
+// SCENE — PORTFOLIO INTELLIGENCE / ADMIN COMMAND CENTER
+// ================================================================
+export function ScenePortfolioIntelligence({ active }: { active: boolean }) {
+  const grades = [
+    { grade: "A", defaultRate: 2, volume: "$1.4M", color: "bg-profit" },
+    { grade: "B", defaultRate: 6, volume: "$1.5M", color: "bg-navy-400" },
+    { grade: "C", defaultRate: 12, volume: "$900K", color: "bg-warning" },
+    { grade: "D", defaultRate: 28, volume: "$400K", color: "bg-danger" },
+  ];
+
+  const brokers = [
+    {
+      name: "Meridian Funding",
+      vol: "$1.8M",
+      approve: 64,
+      default: 7,
+      tone: "ok",
+    },
+    {
+      name: "Atlas Capital",
+      vol: "$1.2M",
+      approve: 58,
+      default: 9,
+      tone: "ok",
+    },
+    {
+      name: "Pinnacle Brokers",
+      vol: "$780K",
+      approve: 51,
+      default: 11,
+      tone: "neutral",
+    },
+    {
+      name: "Crest Advance",
+      vol: "$420K",
+      approve: 32,
+      default: 24,
+      tone: "danger",
+    },
+  ];
+
+  return (
+    <div className="px-6 sm:px-10 py-6 max-w-5xl mx-auto">
+      <FadeIn show={active} delay={0}>
+        <p className="text-xs uppercase tracking-widest text-navy-400 mb-1">
+          Portfolio Intelligence
+        </p>
+        <h2 className="text-2xl font-bold text-white mb-4">
+          Run your shop — not the spreadsheets
+        </h2>
+      </FadeIn>
+
+      {/* KPI strip */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+        {[
+          {
+            label: "MTD funded",
+            value: 4_200_000,
+            prefix: "$",
+            delay: 200,
+          },
+          {
+            label: "Portfolio default rate",
+            value: 8,
+            suffix: ".4%",
+            delay: 350,
+            tone: "warn",
+          },
+          {
+            label: "Fraud caught (90d)",
+            value: 11,
+            delay: 500,
+            tone: "ok",
+          },
+          {
+            label: "Loss avoided",
+            value: 580_000,
+            prefix: "$",
+            delay: 650,
+            tone: "ok",
+          },
+        ].map((s, i) => (
+          <SlideIn key={i} show={active} delay={s.delay}>
+            <div className="rounded-xl bg-navy-900/80 border border-navy-700/50 p-3">
+              <p className="text-[10px] uppercase tracking-wider text-navy-500">
+                {s.label}
+              </p>
+              <p
+                className={`mt-1 text-xl font-bold tabular-nums ${
+                  s.tone === "ok"
+                    ? "text-profit"
+                    : s.tone === "warn"
+                      ? "text-warning"
+                      : "text-white"
+                }`}
+              >
+                <CountUp
+                  end={s.value}
+                  prefix={s.prefix || ""}
+                  suffix={s.suffix || ""}
+                  show={active}
+                  delay={s.delay + 200}
+                />
+              </p>
+            </div>
+          </SlideIn>
+        ))}
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-4">
+        {/* Default rate by grade */}
+        <SlideIn show={active} delay={900}>
+          <div className="rounded-xl bg-navy-900/80 border border-navy-700/50 overflow-hidden">
+            <div className="bg-navy-800/50 px-4 py-2.5 border-b border-navy-700/30 flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-navy-300" />
+              <p className="text-sm font-semibold text-white">
+                Default rate by paper grade
+              </p>
+            </div>
+            <div className="px-5 py-4 space-y-3">
+              {grades.map((g, i) => (
+                <div key={g.grade}>
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block w-5 text-center font-bold text-white">
+                        {g.grade}
+                      </span>
+                      <span className="text-navy-500 text-[11px]">
+                        {g.volume}
+                      </span>
+                    </div>
+                    <span className="font-bold tabular-nums text-white">
+                      <CountUp
+                        end={g.defaultRate}
+                        suffix="%"
+                        show={active}
+                        delay={1500 + i * 200}
+                      />
+                    </span>
+                  </div>
+                  <div className="h-2.5 rounded-full bg-navy-800 overflow-hidden">
+                    <div
+                      className={`h-full transition-all duration-[1500ms] ease-out ${g.color}`}
+                      style={{
+                        width: active ? `${g.defaultRate * 3}%` : "0%",
+                        transitionDelay: `${1200 + i * 200}ms`,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </SlideIn>
+
+        {/* Broker scorecard */}
+        <SlideIn show={active} delay={1100}>
+          <div className="rounded-xl bg-navy-900/80 border border-navy-700/50 overflow-hidden">
+            <div className="bg-navy-800/50 px-4 py-2.5 border-b border-navy-700/30 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Award className="h-4 w-4 text-navy-300" />
+                <p className="text-sm font-semibold text-white">
+                  Broker scorecard
+                </p>
+              </div>
+              <span className="text-[10px] text-navy-500">90-day window</span>
+            </div>
+            <div className="px-2 py-1">
+              <table className="w-full text-xs">
+                <thead className="text-[10px] text-navy-500 uppercase tracking-wider">
+                  <tr>
+                    <th className="text-left px-2 py-1.5">Broker</th>
+                    <th className="text-right px-2 py-1.5">Volume</th>
+                    <th className="text-right px-2 py-1.5">Approve</th>
+                    <th className="text-right px-2 py-1.5">Default</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {brokers.map((b, i) => (
+                    <FadeIn key={b.name} show={active} delay={1600 + i * 200}>
+                      <tr
+                        className={`border-t border-navy-800/40 ${b.tone === "danger" ? "bg-danger/5" : ""}`}
+                      >
+                        <td className="px-2 py-1.5 text-navy-200 font-medium">
+                          {b.name}
+                        </td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-white">
+                          {b.vol}
+                        </td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-navy-300">
+                          {b.approve}%
+                        </td>
+                        <td
+                          className={`px-2 py-1.5 text-right tabular-nums font-semibold ${
+                            b.tone === "danger" ? "text-danger" : "text-navy-300"
+                          }`}
+                        >
+                          {b.default}%
+                          {b.tone === "danger" && (
+                            <TrendingUp className="inline h-3 w-3 ml-1" />
+                          )}
+                        </td>
+                      </tr>
+                    </FadeIn>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <FadeIn show={active} delay={2700}>
+              <div className="border-t border-danger/20 bg-danger/5 px-4 py-2 text-[11px] text-danger flex items-center gap-2">
+                <AlertTriangle className="h-3 w-3" />
+                Crest Advance default rate is 3.4× portfolio average — review
+                relationship.
+              </div>
+            </FadeIn>
+          </div>
+        </SlideIn>
+      </div>
+
+      <FadeIn show={active} delay={3500}>
+        <p className="text-sm text-navy-400 text-center mt-4">
+          Pricing tuned to grade. Broker quality measured. Every loss caught
+          is a dollar earned.
+        </p>
+      </FadeIn>
+    </div>
+  );
+}
+
+// ================================================================
+// SCENE — CROSS-PORTFOLIO ANOMALY CATCH
+// ================================================================
+export function SceneAnomalyCatch({ active }: { active: boolean }) {
+  const [revealed, setRevealed] = useState(0);
+  useEffect(() => {
+    if (!active) {
+      setRevealed(0);
+      return;
+    }
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    timers.push(setTimeout(() => setRevealed(1), 1400));
+    timers.push(setTimeout(() => setRevealed(2), 2300));
+    timers.push(setTimeout(() => setRevealed(3), 3300));
+    timers.push(setTimeout(() => setRevealed(4), 4200));
+    return () => timers.forEach(clearTimeout);
+  }, [active]);
+
+  const applications = [
+    {
+      when: "2026-03-04",
+      ein: "12-3456789",
+      legal: "Sunrise Auto Body LLC",
+      broker: "Meridian",
+      amount: "$50K",
+      status: "Pending",
+    },
+    {
+      when: "2026-02-12",
+      ein: "47-1234567",
+      legal: "S.A.B. Holdings LLC",
+      broker: "Meridian",
+      amount: "$45K",
+      status: "Declined",
+    },
+    {
+      when: "2026-01-28",
+      ein: "88-9876543",
+      legal: "Reyes Family Auto Inc",
+      broker: "Atlas",
+      amount: "$60K",
+      status: "Withdrawn",
+    },
+  ];
+
+  return (
+    <div className="px-6 sm:px-10 py-6 max-w-5xl mx-auto">
+      <FadeIn show={active} delay={0}>
+        <p className="text-xs uppercase tracking-widest text-navy-400 mb-1">
+          Cross-Portfolio Intelligence
+        </p>
+        <h2 className="text-2xl font-bold text-white mb-4">
+          The platform learns your book.
+        </h2>
+      </FadeIn>
+
+      {/* Big alert banner */}
+      <SlideIn show={active} delay={300}>
+        <div className="rounded-xl border border-danger/40 bg-danger/10 px-5 py-4 mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-danger/20 ring-2 ring-danger/40 animate-pulse">
+              <AlertOctagon className="h-5 w-5 text-danger" />
+            </div>
+            <div>
+              <p className="text-sm font-bold uppercase tracking-wider text-danger">
+                Pattern match detected
+              </p>
+              <p className="text-xs text-navy-200 mt-0.5">
+                3 applications · 60 days · 1 person · 3 EINs · 2 brokers
+              </p>
+            </div>
+          </div>
+          <div className="hidden sm:flex items-center gap-1 rounded-full bg-danger/15 px-3 py-1 text-[10px] font-bold text-danger">
+            <Network className="h-3 w-3" />
+            Auto-blocked
+          </div>
+        </div>
+      </SlideIn>
+
+      <div className="grid sm:grid-cols-[1fr_1.2fr] gap-4">
+        {/* Match dimensions */}
+        <SlideIn show={active} delay={500} direction="left">
+          <div className="rounded-xl bg-navy-900/80 border border-navy-700/50 overflow-hidden">
+            <div className="bg-navy-800/50 px-4 py-2.5 border-b border-navy-700/30 flex items-center gap-2">
+              <Eye className="h-4 w-4 text-navy-300" />
+              <p className="text-sm font-semibold text-white">
+                What we matched on
+              </p>
+            </div>
+            <div className="px-5 py-3 space-y-2.5 text-xs">
+              {[
+                {
+                  icon: KeyRound,
+                  label: "SSN (PG)",
+                  value: "###-##-1234",
+                  match: true,
+                  d: 800,
+                },
+                {
+                  icon: Mail,
+                  label: "Email",
+                  value: "carlos.reyes@gmail.com",
+                  match: true,
+                  d: 1000,
+                },
+                {
+                  icon: Banknote,
+                  label: "Routing + acct mask",
+                  value: "021000021 / ••4242",
+                  match: true,
+                  d: 1200,
+                },
+                {
+                  icon: Building2,
+                  label: "Business address",
+                  value: "1847 Atlantic Ave, Brooklyn",
+                  match: true,
+                  d: 1400,
+                },
+                {
+                  icon: FileText,
+                  label: "EIN",
+                  value: "3 different — 47-… / 88-… / 12-…",
+                  match: false,
+                  d: 1600,
+                },
+                {
+                  icon: Briefcase,
+                  label: "Legal name",
+                  value: "3 different (Reyes, S.A.B., Sunrise)",
+                  match: false,
+                  d: 1800,
+                },
+              ].map((row, i) => {
+                const Icon = row.icon;
+                return (
+                  <FadeIn key={i} show={active} delay={row.d}>
+                    <div className="flex items-center gap-3">
+                      <Icon
+                        className={`h-3.5 w-3.5 shrink-0 ${row.match ? "text-danger" : "text-navy-500"}`}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] uppercase tracking-wider text-navy-500">
+                          {row.label}
+                        </p>
+                        <p className="text-navy-200 truncate">{row.value}</p>
+                      </div>
+                      {row.match ? (
+                        <span className="rounded bg-danger/15 px-1.5 py-0.5 text-[9px] font-bold text-danger">
+                          MATCH
+                        </span>
+                      ) : (
+                        <span className="rounded bg-navy-800 px-1.5 py-0.5 text-[9px] font-bold text-navy-400">
+                          DIFF
+                        </span>
+                      )}
+                    </div>
+                  </FadeIn>
+                );
+              })}
+            </div>
+          </div>
+        </SlideIn>
+
+        {/* Timeline of applications */}
+        <SlideIn show={active} delay={700} direction="right">
+          <div className="rounded-xl bg-navy-900/80 border border-navy-700/50 overflow-hidden">
+            <div className="bg-navy-800/50 px-4 py-2.5 border-b border-navy-700/30 flex items-center gap-2">
+              <Clock className="h-4 w-4 text-navy-300" />
+              <p className="text-sm font-semibold text-white">
+                Application history — same person
+              </p>
+            </div>
+            <div className="px-3 py-2">
+              <table className="w-full text-xs">
+                <thead className="text-[10px] text-navy-500 uppercase tracking-wider">
+                  <tr>
+                    <th className="text-left px-2 py-1.5">Date</th>
+                    <th className="text-left px-2 py-1.5">Legal</th>
+                    <th className="text-left px-2 py-1.5 hidden sm:table-cell">
+                      EIN
+                    </th>
+                    <th className="text-right px-2 py-1.5">Amt</th>
+                    <th className="text-left px-2 py-1.5">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {applications.map((a, i) => (
+                    <FadeIn key={i} show={active} delay={1100 + i * 350}>
+                      <tr
+                        className={`border-t border-navy-800/30 ${i === 0 ? "bg-danger/10" : ""}`}
+                      >
+                        <td className="px-2 py-1.5 text-navy-300 tabular-nums">
+                          {a.when}
+                        </td>
+                        <td className="px-2 py-1.5 text-white font-medium truncate max-w-[140px]">
+                          {a.legal}
+                          {i === 0 && (
+                            <span className="ml-1.5 rounded bg-danger/20 px-1 py-0.5 text-[9px] font-bold text-danger uppercase">
+                              Now
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-2 py-1.5 text-navy-400 hidden sm:table-cell tabular-nums">
+                          {a.ein}
+                        </td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-white">
+                          {a.amount}
+                        </td>
+                        <td className="px-2 py-1.5">
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                              a.status === "Declined"
+                                ? "bg-danger/20 text-danger"
+                                : a.status === "Withdrawn"
+                                  ? "bg-navy-700 text-navy-300"
+                                  : "bg-warning/20 text-warning"
+                            }`}
+                          >
+                            {a.status}
+                          </span>
+                        </td>
+                      </tr>
+                    </FadeIn>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {revealed >= 4 && (
+              <FadeIn show={active} delay={0}>
+                <div className="border-t border-danger/20 bg-danger/5 px-4 py-2 text-[11px] text-danger flex items-center gap-2">
+                  <ShieldAlert className="h-3 w-3" />
+                  $50K loss prevented. Brokers Meridian + Atlas flagged for
+                  review.
+                </div>
+              </FadeIn>
+            )}
+          </div>
+        </SlideIn>
+      </div>
+
+      <FadeIn show={active} delay={5000}>
+        <p className="text-sm text-navy-400 text-center mt-4">
+          Same SSN. Different EINs. Different brokers. Caught before funding.
         </p>
       </FadeIn>
     </div>

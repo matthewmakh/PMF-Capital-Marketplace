@@ -10,6 +10,7 @@ import {
   SceneTamperDetection,
   SceneStatementAnalytics,
   SceneVendorPulls,
+  SceneDataMerch,
   SceneUnderwritingSummary,
   ScenePricingEngine,
   SceneDecision,
@@ -71,6 +72,13 @@ const SCENES = [
     caption:
       "Microbilt, DataMerch, Wolters Kluwer iLien, and KYB fire in parallel — credit, OFAC, MCA blacklist, UCC liens, business legitimacy.",
     duration: 8500,
+  },
+  {
+    component: SceneDataMerch,
+    label: "DataMerch",
+    caption:
+      "DataMerch is the MCA industry's shared blacklist — 180+ funders contribute, every shop reads on every deal. Last Tuesday it caught a deal that passed every other check.",
+    duration: 10000,
   },
   {
     component: SceneUnderwritingSummary,

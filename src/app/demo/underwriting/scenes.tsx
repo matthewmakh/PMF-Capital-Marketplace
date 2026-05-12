@@ -38,6 +38,8 @@ import {
   ClipboardList,
   BarChart3,
   Users,
+  Search,
+  ArrowDown,
 } from "lucide-react";
 
 // ================================================================
@@ -2613,6 +2615,296 @@ export function SceneAnomalyCatch({ active }: { active: boolean }) {
       <FadeIn show={active} delay={5000}>
         <p className="text-sm text-navy-400 text-center mt-4">
           Same SSN. Different EINs. Different brokers. Caught before funding.
+        </p>
+      </FadeIn>
+    </div>
+  );
+}
+
+// ================================================================
+// SCENE — DATAMERCH DEEP DIVE
+// ================================================================
+export function SceneDataMerch({ active }: { active: boolean }) {
+  const [hitShown, setHitShown] = useState(false);
+  const [hitsRevealed, setHitsRevealed] = useState(0);
+  const [declined, setDeclined] = useState(false);
+
+  useEffect(() => {
+    if (!active) {
+      setHitShown(false);
+      setHitsRevealed(0);
+      setDeclined(false);
+      return;
+    }
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    timers.push(setTimeout(() => setHitShown(true), 2400));
+    for (let i = 0; i < 3; i++) {
+      timers.push(
+        setTimeout(
+          () => setHitsRevealed((r) => Math.max(r, i + 1)),
+          2900 + i * 700
+        )
+      );
+    }
+    timers.push(setTimeout(() => setDeclined(true), 5400));
+    return () => timers.forEach(clearTimeout);
+  }, [active]);
+
+  const hits = [
+    {
+      funder: "Funder #214",
+      date: "2024-11-12",
+      category: "DEFAULT",
+      detail:
+        "Stopped ACH after $17K disbursed · $32,400 outstanding · no contact since",
+      severity: "critical" as const,
+    },
+    {
+      funder: "Funder #481",
+      date: "2024-08-04",
+      category: "SUSPICIOUS",
+      detail:
+        "Switched bank accounts mid-deal · new account in spouse's name",
+      severity: "high" as const,
+    },
+    {
+      funder: "Funder #103",
+      date: "2024-06-22",
+      category: "SLOW PAYER",
+      detail: "Required reverse consolidation · 8 missed payments · settled",
+      severity: "med" as const,
+    },
+  ];
+
+  return (
+    <div className="px-6 sm:px-10 py-6 max-w-5xl mx-auto">
+      <FadeIn show={active} delay={0}>
+        <p className="text-xs uppercase tracking-widest text-navy-400 mb-1">
+          DataMerch · Industry Shared Intelligence
+        </p>
+        <h2 className="text-2xl font-bold text-white mb-4">
+          The blacklist every MCA shop reads — and contributes to.
+        </h2>
+      </FadeIn>
+
+      {/* Stats strip */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+        {[
+          { label: "Funder members", value: 180, suffix: "+", delay: 200 },
+          {
+            label: "Merchant records",
+            value: 102_000,
+            suffix: "+",
+            delay: 350,
+          },
+          {
+            label: "Reports filed",
+            value: 2_400_000,
+            suffix: "+",
+            delay: 500,
+          },
+          {
+            label: "Industry loss avoided",
+            value: 58_000_000,
+            prefix: "$",
+            delay: 650,
+          },
+        ].map((s, i) => (
+          <SlideIn key={i} show={active} delay={s.delay}>
+            <div className="rounded-xl bg-navy-900/80 border border-navy-700/50 p-3">
+              <p className="text-[10px] uppercase tracking-wider text-navy-500">
+                {s.label}
+              </p>
+              <p className="mt-1 text-lg font-bold tabular-nums text-white">
+                <CountUp
+                  end={s.value}
+                  prefix={s.prefix || ""}
+                  suffix={s.suffix || ""}
+                  show={active}
+                  delay={s.delay + 200}
+                />
+              </p>
+            </div>
+          </SlideIn>
+        ))}
+      </div>
+
+      <div className="grid sm:grid-cols-[1fr_1.4fr] gap-4">
+        {/* Left: how-it-works flow */}
+        <SlideIn show={active} delay={900} direction="left">
+          <div className="rounded-xl bg-navy-900/80 border border-navy-700/50 overflow-hidden h-full">
+            <div className="bg-navy-800/50 px-4 py-2.5 border-b border-navy-700/30 flex items-center gap-2">
+              <Database className="h-4 w-4 text-navy-300" />
+              <p className="text-sm font-semibold text-white">How it works</p>
+            </div>
+            <div className="px-4 py-4 flex flex-col items-center gap-2">
+              <div className="rounded-lg bg-navy-800/40 border border-navy-700/40 px-4 py-2.5 text-center w-full">
+                <p className="text-[10px] uppercase tracking-wider text-navy-500">
+                  180+ funders
+                </p>
+                <p className="text-sm font-semibold text-navy-100 mt-0.5">
+                  Report bad actors
+                </p>
+              </div>
+              <ArrowDown className="h-4 w-4 text-navy-500" />
+              <div className="rounded-lg bg-navy-700/50 border border-navy-500/40 px-4 py-2.5 text-center w-full">
+                <p className="text-[10px] uppercase tracking-wider text-navy-300">
+                  DataMerch registry
+                </p>
+                <p className="text-sm font-bold text-white mt-0.5">
+                  Shared · EIN-keyed
+                </p>
+              </div>
+              <ArrowDown className="h-4 w-4 text-navy-500" />
+              <div className="rounded-lg bg-profit/10 border border-profit/40 px-4 py-2.5 text-center w-full">
+                <p className="text-[10px] uppercase tracking-wider text-profit/80">
+                  Your platform
+                </p>
+                <p className="text-sm font-bold text-white mt-0.5">
+                  Queries every deal
+                </p>
+                <p className="text-[10px] text-profit mt-0.5">
+                  Auto-contributes back on funding
+                </p>
+              </div>
+            </div>
+          </div>
+        </SlideIn>
+
+        {/* Right: live query, war-story style */}
+        <SlideIn show={active} delay={1100} direction="right">
+          <div className="rounded-xl bg-navy-900/80 border border-navy-700/50 overflow-hidden">
+            <div className="bg-navy-800/50 px-4 py-2.5 border-b border-navy-700/30 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Search className="h-4 w-4 text-navy-300" />
+                <p className="text-sm font-semibold text-white">
+                  Last Tuesday — a different deal
+                </p>
+              </div>
+              <span className="text-[10px] text-navy-500">
+                Live query
+              </span>
+            </div>
+            <div className="px-4 py-3">
+              {/* Deal context */}
+              <div className="rounded-md bg-navy-800/40 border border-navy-700/40 px-3 py-2 mb-3">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-sm font-semibold text-white">
+                    Coastal Marine LLC
+                  </p>
+                  <p className="text-sm text-navy-200 tabular-nums">
+                    $80,000
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    "A-paper statements",
+                    "FICO 712",
+                    "UCC clear",
+                    "OFAC clear",
+                    "KYB ✓",
+                  ].map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded-full bg-profit/10 border border-profit/20 px-1.5 py-0.5 text-[9px] font-semibold text-profit"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                <p className="mt-1.5 text-[10px] text-navy-500 italic">
+                  Everything else looked fine.
+                </p>
+              </div>
+
+              {/* HIT badge */}
+              <div
+                className={`flex items-center justify-between mb-2 transition-opacity duration-500 ${
+                  hitShown ? "opacity-100" : "opacity-0"
+                }`}
+              >
+                <p className="text-[11px] uppercase tracking-wider text-navy-400 font-semibold">
+                  DataMerch result
+                </p>
+                <span className="rounded-full bg-danger/15 border border-danger/30 px-2.5 py-0.5 text-[11px] font-bold text-danger flex items-center gap-1">
+                  <AlertOctagon className="h-3 w-3" />
+                  HIT · 3 entries
+                </span>
+              </div>
+
+              {/* Hits */}
+              <div className="space-y-1.5">
+                {hits.map((h, i) => {
+                  const visible = i < hitsRevealed;
+                  const borderClass =
+                    h.severity === "critical"
+                      ? "border-danger/40 bg-danger/10"
+                      : h.severity === "high"
+                        ? "border-warning/40 bg-warning/10"
+                        : "border-navy-700/50 bg-navy-800/40";
+                  const badgeClass =
+                    h.severity === "critical"
+                      ? "bg-danger/30 text-danger"
+                      : h.severity === "high"
+                        ? "bg-warning/30 text-warning"
+                        : "bg-navy-700 text-navy-200";
+                  return (
+                    <div
+                      key={i}
+                      className={`rounded-md border px-3 py-2 transition-all duration-500 ${
+                        visible
+                          ? "opacity-100 translate-y-0"
+                          : "opacity-0 -translate-y-1"
+                      } ${borderClass}`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-mono text-navy-400">
+                            {h.funder}
+                          </span>
+                          <span className="text-[10px] text-navy-500 tabular-nums">
+                            {h.date}
+                          </span>
+                        </div>
+                        <span
+                          className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${badgeClass}`}
+                        >
+                          {h.category}
+                        </span>
+                      </div>
+                      <p className="text-xs text-navy-100 leading-snug">
+                        {h.detail}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Final callout */}
+              <div
+                className={`mt-3 rounded-lg border border-profit/40 bg-profit/10 px-3 py-2.5 flex items-center gap-2 transition-all duration-500 ${
+                  declined
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 translate-y-1"
+                }`}
+              >
+                <ShieldCheck className="h-4 w-4 text-profit shrink-0" />
+                <p className="text-xs">
+                  <span className="font-bold text-profit">Declined.</span>{" "}
+                  <span className="text-navy-100">
+                    $80,000 loss avoided. Would have passed every other check.
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </SlideIn>
+      </div>
+
+      <FadeIn show={active} delay={6300}>
+        <p className="text-sm text-navy-400 text-center mt-4">
+          The most important data source in MCA. Cheap. Industry-standard.
+          Wired in by default.
         </p>
       </FadeIn>
     </div>

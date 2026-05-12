@@ -121,7 +121,7 @@ export function SceneProblem({ active }: { active: boolean }) {
             <ul className="px-5 py-4 space-y-3 text-sm">
               {[
                 {
-                  text: "Email a broker, ask for 3 months of statements",
+                  text: "Chase broker for missing stips",
                   time: "10 min",
                 },
                 { text: "Open each PDF, eyeball for tampering", time: "15 min" },
@@ -180,7 +180,7 @@ export function SceneProblem({ active }: { active: boolean }) {
                 "Metrics engine computes everything",
                 "All vendor pulls fire in parallel",
                 "Paper grade composes in real time",
-                "Underwriter clicks Approve",
+                "Underwriter picks an offer tier",
               ].map((text, i) => (
                 <FadeIn key={i} show={active} delay={800 + i * 180}>
                   <li className="flex items-start gap-2">
@@ -204,7 +204,7 @@ export function SceneProblem({ active }: { active: boolean }) {
 
       <FadeIn show={active} delay={3000}>
         <p className="text-sm text-navy-400 text-center mt-6">
-          You hire one underwriter to do the work of five.
+          Same headcount. Multiples of the deal flow.
         </p>
       </FadeIn>
     </div>
@@ -212,48 +212,58 @@ export function SceneProblem({ active }: { active: boolean }) {
 }
 
 // ================================================================
-// SCENE 3 — MERCHANT PORTAL UPLOAD
+// SCENE 3 — MERCHANT PORTAL UPLOAD (with auto-classification)
 // ================================================================
+type DocTypeColor = "navy" | "warning" | "profit";
+
+const PORTAL_FILES: Array<{
+  name: string;
+  size: string;
+  docType: string;
+  docTypeColor: DocTypeColor;
+}> = [
+  { name: "ChaseStatement_2026-01.pdf", size: "284 KB", docType: "Bank Statement", docTypeColor: "navy" },
+  { name: "ChaseStatement_2025-12.pdf", size: "291 KB", docType: "Bank Statement", docTypeColor: "navy" },
+  { name: "ChaseStatement_2025-11.pdf", size: "276 KB", docType: "Bank Statement", docTypeColor: "navy" },
+  { name: "Drivers_License.jpg", size: "412 KB", docType: "ID — Driver's License", docTypeColor: "warning" },
+  { name: "Voided_Check.pdf", size: "98 KB", docType: "Voided Check", docTypeColor: "profit" },
+];
+
+function fileLifecycle(idx: number, stage: number): "hidden" | "uploading" | "detecting" | "classified" {
+  // Stage progression:
+  //   1 = drag-over visible
+  //   2 = files appeared (all uploading)
+  //   3 = all uploads complete (now detecting)
+  //   4 = first 3 statements classified, ID + voided still detecting
+  //   5 = ID also classified, voided still detecting
+  //   6 = voided classified — all done
+  if (stage < 2) return "hidden";
+  if (stage === 2) return "uploading";
+  if (stage === 3) return "detecting";
+  if (idx < 3) return "classified";
+  if (idx === 3) return stage >= 5 ? "classified" : "detecting";
+  return stage >= 6 ? "classified" : "detecting";
+}
+
 export function ScenePortalUpload({ active }: { active: boolean }) {
-  const [dragOver, setDragOver] = useState(false);
-  const [files, setFiles] = useState<
-    { name: string; size: string; status: "uploading" | "done" }[]
-  >([]);
+  const [stage, setStage] = useState(0);
 
   useEffect(() => {
     if (!active) {
-      setDragOver(false);
-      setFiles([]);
+      setStage(0);
       return;
     }
     const timers: ReturnType<typeof setTimeout>[] = [];
-    timers.push(setTimeout(() => setDragOver(true), 1200));
-    timers.push(
-      setTimeout(() => {
-        setDragOver(false);
-        setFiles([
-          { name: "ChaseStatement_2026-01.pdf", size: "284 KB", status: "uploading" },
-          { name: "ChaseStatement_2025-12.pdf", size: "291 KB", status: "uploading" },
-          { name: "ChaseStatement_2025-11.pdf", size: "276 KB", status: "uploading" },
-          { name: "Drivers_License.jpg", size: "412 KB", status: "uploading" },
-          { name: "Voided_Check.pdf", size: "98 KB", status: "uploading" },
-        ]);
-      }, 1900)
-    );
-    timers.push(
-      setTimeout(() => {
-        setFiles((prev) =>
-          prev.map((f, i) => (i < 3 ? { ...f, status: "done" } : f))
-        );
-      }, 3200)
-    );
-    timers.push(
-      setTimeout(() => {
-        setFiles((prev) => prev.map((f) => ({ ...f, status: "done" })));
-      }, 4400)
-    );
+    timers.push(setTimeout(() => setStage(1), 1200)); // drag-over
+    timers.push(setTimeout(() => setStage(2), 1900)); // files appear (uploading)
+    timers.push(setTimeout(() => setStage(3), 3000)); // detecting
+    timers.push(setTimeout(() => setStage(4), 3700)); // statements classified
+    timers.push(setTimeout(() => setStage(5), 4300)); // ID classified
+    timers.push(setTimeout(() => setStage(6), 4800)); // voided check classified
     return () => timers.forEach(clearTimeout);
   }, [active]);
+
+  const dragOver = stage === 1;
 
   return (
     <div className="px-6 sm:px-10 py-8 max-w-5xl mx-auto">
@@ -303,35 +313,56 @@ export function ScenePortalUpload({ active }: { active: boolean }) {
                 </p>
               </div>
 
-              {files.length > 0 && (
+              {stage >= 2 && (
                 <ul className="mt-4 space-y-1.5">
-                  {files.map((f, i) => (
-                    <li
-                      key={i}
-                      className="flex items-center justify-between rounded-md border border-navy-700/50 bg-navy-800/40 px-3 py-2 text-xs"
-                    >
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <FileText className="h-3.5 w-3.5 text-navy-400 shrink-0" />
-                        <span className="truncate text-navy-200">{f.name}</span>
-                        <span className="text-navy-500 shrink-0">
-                          {f.size}
-                        </span>
-                      </div>
-                      <div className="ml-3 flex items-center gap-1 shrink-0">
-                        {f.status === "uploading" ? (
-                          <>
-                            <Loader2 className="h-3 w-3 animate-spin text-navy-400" />
-                            <span className="text-navy-500">Uploading</span>
-                          </>
-                        ) : (
-                          <>
-                            <Check className="h-3 w-3 text-profit" />
-                            <span className="text-profit">Uploaded</span>
-                          </>
-                        )}
-                      </div>
-                    </li>
-                  ))}
+                  {PORTAL_FILES.map((f, i) => {
+                    const state = fileLifecycle(i, stage);
+                    if (state === "hidden") return null;
+                    const badgeClass =
+                      f.docTypeColor === "navy"
+                        ? "bg-navy-500/25 text-navy-100 border-navy-500/40"
+                        : f.docTypeColor === "warning"
+                          ? "bg-warning/15 text-warning border-warning/30"
+                          : "bg-profit/15 text-profit border-profit/30";
+                    return (
+                      <li
+                        key={i}
+                        className="flex items-center justify-between rounded-md border border-navy-700/50 bg-navy-800/40 px-3 py-2 text-xs"
+                      >
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <FileText className="h-3.5 w-3.5 text-navy-400 shrink-0" />
+                          <span className="truncate text-navy-200">
+                            {f.name}
+                          </span>
+                          <span className="text-navy-500 shrink-0">
+                            {f.size}
+                          </span>
+                        </div>
+                        <div className="ml-3 flex items-center gap-1.5 shrink-0">
+                          {state === "uploading" && (
+                            <>
+                              <Loader2 className="h-3 w-3 animate-spin text-navy-400" />
+                              <span className="text-navy-500">Uploading</span>
+                            </>
+                          )}
+                          {state === "detecting" && (
+                            <>
+                              <ScanLine className="h-3 w-3 animate-pulse text-navy-200" />
+                              <span className="text-navy-200">Detecting…</span>
+                            </>
+                          )}
+                          {state === "classified" && (
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-all duration-500 ${badgeClass}`}
+                            >
+                              <Check className="h-2.5 w-2.5" />
+                              {f.docType}
+                            </span>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>
@@ -826,7 +857,7 @@ export function SceneVendorPulls({ active }: { active: boolean }) {
   const vendors = [
     {
       key: "consumer",
-      label: "Microbilt — Consumer Credit (PG)",
+      label: "Microbilt — Personal Guarantor Credit",
       icon: KeyRound,
       result: "FICO 612 · 1 derog · 0 BK",
       tone: "warn" as const,
@@ -938,8 +969,8 @@ export function SceneVendorPulls({ active }: { active: boolean }) {
             show={active}
           />
           <p className="mt-3 text-[11px] text-navy-500">
-            Every adapter has a typed mock-mode fallback so the platform runs
-            end-to-end before any vendor contracts are in place.
+            Each call is audit-logged with cost, latency, and result. Re-runnable
+            from any application detail page.
           </p>
         </div>
       </FadeIn>
@@ -1224,7 +1255,7 @@ export function SceneDecision({ active }: { active: boolean }) {
                 {
                   ts: logged ? "14:22:48" : "—:—:—",
                   action: "UW_DECISION_MADE",
-                  detail: "approve · C grade",
+                  detail: "Approved $35K · C grade",
                   delay: 2700,
                   highlight: true,
                 },
@@ -1280,13 +1311,12 @@ export function SceneClosing({ active }: { active: boolean }) {
       </FadeIn>
       <FadeIn show={active} delay={500}>
         <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">
-          That was 90 seconds.
+          90 seconds per file.
         </h1>
       </FadeIn>
       <FadeIn show={active} delay={900}>
         <p className="text-base text-navy-300 max-w-xl mb-8">
-          In a real shop that&apos;s 2½ hours of underwriter time saved per file.
-          Every file. Every day.
+          2½ hours of underwriter time saved per deal. Every file. Every day.
         </p>
       </FadeIn>
 
@@ -1700,6 +1730,10 @@ export function ScenePricingEngine({ active }: { active: boolean }) {
     return () => timers.forEach(clearTimeout);
   }, [active]);
 
+  // Daily ACH math: payback / (term_months × 22 business days)
+  //   Conservative: 43500 / 88  = 494
+  //   Standard:     49700 / 110 = 452
+  //   Aggressive:   55200 / 132 = 418
   const offers = [
     {
       label: "Conservative",
@@ -1707,7 +1741,7 @@ export function ScenePricingEngine({ active }: { active: boolean }) {
       factor: 1.45,
       term: 4,
       holdback: 15,
-      daily: 369,
+      daily: 494,
       payback: 43_500,
       tone: "navy",
     },
@@ -1717,7 +1751,7 @@ export function ScenePricingEngine({ active }: { active: boolean }) {
       factor: 1.42,
       term: 5,
       holdback: 12,
-      daily: 365,
+      daily: 452,
       payback: 49_700,
       tone: "profit",
       highlight: true,
@@ -1728,7 +1762,7 @@ export function ScenePricingEngine({ active }: { active: boolean }) {
       factor: 1.38,
       term: 6,
       holdback: 10,
-      daily: 348,
+      daily: 418,
       payback: 55_200,
       tone: "warning",
     },
@@ -2393,7 +2427,7 @@ export function SceneAnomalyCatch({ active }: { active: boolean }) {
       when: "2026-03-04",
       ein: "12-3456789",
       legal: "Sunrise Auto Body LLC",
-      broker: "Meridian",
+      broker: "Eastline",
       amount: "$50K",
       status: "Pending",
     },
@@ -2401,7 +2435,7 @@ export function SceneAnomalyCatch({ active }: { active: boolean }) {
       when: "2026-02-12",
       ein: "47-1234567",
       legal: "S.A.B. Holdings LLC",
-      broker: "Meridian",
+      broker: "Eastline",
       amount: "$45K",
       status: "Declined",
     },
@@ -2409,7 +2443,7 @@ export function SceneAnomalyCatch({ active }: { active: boolean }) {
       when: "2026-01-28",
       ein: "88-9876543",
       legal: "Reyes Family Auto Inc",
-      broker: "Atlas",
+      broker: "Vanguard",
       amount: "$60K",
       status: "Withdrawn",
     },
@@ -2603,7 +2637,7 @@ export function SceneAnomalyCatch({ active }: { active: boolean }) {
               <FadeIn show={active} delay={0}>
                 <div className="border-t border-danger/20 bg-danger/5 px-4 py-2 text-[11px] text-danger flex items-center gap-2">
                   <ShieldAlert className="h-3 w-3" />
-                  $50K loss prevented. Brokers Meridian + Atlas flagged for
+                  $50K loss prevented. Brokers Eastline + Vanguard flagged for
                   review.
                 </div>
               </FadeIn>
@@ -2687,27 +2721,28 @@ export function SceneDataMerch({ active }: { active: boolean }) {
         </h2>
       </FadeIn>
 
-      {/* Stats strip */}
+      {/* Stats strip — verifiable facts only, no fabricated numbers */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
         {[
-          { label: "Funder members", value: 180, suffix: "+", delay: 200 },
+          {
+            label: "Funder members",
+            delay: 200,
+            numeric: { value: 180, suffix: "+" },
+          },
           {
             label: "Merchant records",
-            value: 102_000,
-            suffix: "+",
             delay: 350,
+            numeric: { value: 100_000, suffix: "+" },
           },
           {
-            label: "Reports filed",
-            value: 2_400_000,
-            suffix: "+",
+            label: "Established",
             delay: 500,
+            text: "2015",
           },
           {
-            label: "Industry loss avoided",
-            value: 58_000_000,
-            prefix: "$",
+            label: "Lookup",
             delay: 650,
+            text: "Real-time · EIN",
           },
         ].map((s, i) => (
           <SlideIn key={i} show={active} delay={s.delay}>
@@ -2716,13 +2751,16 @@ export function SceneDataMerch({ active }: { active: boolean }) {
                 {s.label}
               </p>
               <p className="mt-1 text-lg font-bold tabular-nums text-white">
-                <CountUp
-                  end={s.value}
-                  prefix={s.prefix || ""}
-                  suffix={s.suffix || ""}
-                  show={active}
-                  delay={s.delay + 200}
-                />
+                {s.numeric ? (
+                  <CountUp
+                    end={s.numeric.value}
+                    suffix={s.numeric.suffix || ""}
+                    show={active}
+                    delay={s.delay + 200}
+                  />
+                ) : (
+                  s.text
+                )}
               </p>
             </div>
           </SlideIn>

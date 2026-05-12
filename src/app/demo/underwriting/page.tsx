@@ -36,7 +36,7 @@ const SCENES = [
     label: "Broker Intake",
     caption:
       "Deals arrive by email. The platform parses them, creates the application, and emails a merchant-portal link back — no keyboard touched.",
-    duration: 8000,
+    duration: 6500,
   },
   {
     component: ScenePipelineDashboard,
@@ -49,8 +49,8 @@ const SCENES = [
     component: ScenePortalUpload,
     label: "Merchant Portal",
     caption:
-      "Merchants drag-drop documents or connect their bank via Plaid — no login, no friction. Same look at every step.",
-    duration: 7500,
+      "Merchants drag-drop documents or connect their bank via Plaid. Every upload is auto-classified — bank statement, ID, voided check — before it hits the queue.",
+    duration: 8000,
   },
   {
     component: SceneTamperDetection,
@@ -95,18 +95,18 @@ const SCENES = [
     duration: 9000,
   },
   {
+    component: SceneStateDisclosure,
+    label: "Compliance",
+    caption:
+      "CA SB 1235, NY CFDL, UT, VA, CT — state-specific disclosures with APR-equivalent generated alongside every offer.",
+    duration: 8500,
+  },
+  {
     component: SceneDecision,
     label: "Decision & Audit",
     caption:
       "Underwriter approves, declines, or requests stips. Every action is audit-logged with actor, IP, timestamp, and decision rationale.",
     duration: 8000,
-  },
-  {
-    component: SceneStateDisclosure,
-    label: "Compliance",
-    caption:
-      "CA SB 1235, NY CFDL, UT, VA, CT — state-specific disclosures with APR-equivalent generated automatically on every offer.",
-    duration: 8500,
   },
   {
     component: ScenePortfolioIntelligence,

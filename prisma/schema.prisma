@@ -17,6 +17,7 @@ enum UserRole {
   ADMIN
   SYNDICATE_REP
   READ_ONLY
+  UNDERWRITER
 }
 
 enum DealStatus {
@@ -71,6 +72,46 @@ enum AuditAction {
   BANK_ACCOUNT_REMOVED
   EMAIL_PARSED
   SETTINGS_UPDATED
+  UW_APP_CREATED
+  UW_APP_UPDATED
+  UW_DOC_UPLOADED
+  UW_BANK_LINKED
+  UW_ANALYSIS_RUN
+  UW_VENDOR_PULL
+  UW_DECISION_MADE
+}
+
+enum UwAppStatus {
+  INTAKE
+  DOCS_PENDING
+  ANALYZING
+  UNDER_REVIEW
+  APPROVED
+  DECLINED
+  WITHDRAWN
+}
+
+enum PaperGrade {
+  A
+  B
+  C
+  D
+  UNGRADED
+}
+
+enum UwDocType {
+  BANK_STATEMENT
+  ID_FRONT
+  ID_BACK
+  VOIDED_CHECK
+  APPLICATION
+  EIN_LETTER
+  ARTICLES
+  LEASE
+  PROCESSING_STATEMENT
+  PAYOFF_LETTER
+  TAX_RETURN
+  OTHER
 }
 
 // ============================================================
@@ -109,6 +150,11 @@ model User {
   postedPayments  Payment[]           @relation("PaymentPoster")
   approvedPayouts PayoutRequest[]     @relation("PayoutApprover")
   notifications   Notification[]
+
+  uwAppsCreated   UwApplication[]     @relation("UwAppCreatedBy")
+  uwAppsAssigned  UwApplication[]     @relation("UwAppAssignedTo")
+  uwDocsUploaded  UwDocument[]        @relation("UwDocUploader")
+  uwDecisions     UwDecision[]        @relation("UwDecisionMaker")
 
   @@map("users")
 }
@@ -385,4 +431,149 @@ model SystemSetting {
   updatedAt   DateTime @updatedAt
 
   @@map("system_settings")
+}
+
+// ============================================================
+// UNDERWRITING (MCA) MODELS
+// ============================================================
+
+model UwApplication {
+  id          String      @id @default(cuid())
+  status      UwAppStatus @default(INTAKE)
+  paperGrade  PaperGrade  @default(UNGRADED)
+  publicToken String      @unique
+
+  // Business
+  legalName            String
+  dba                  String?
+  ein                  String?
+  entityType           String?
+  naics                String?
+  state                String?
+  businessPhone        String?
+  businessEmail        String?
+  businessAddress      String?
+  timeInBusinessMonths Int?
+  requestedAmount      Decimal? @db.Decimal(12, 2)
+  useOfFunds           String?
+  monthlyRevenueClaim  Decimal? @db.Decimal(12, 2)
+
+  // Workflow
+  createdById  String
+  createdBy    User      @relation("UwAppCreatedBy", fields: [createdById], references: [id])
+  assignedToId String?
+  assignedTo   User?     @relation("UwAppAssignedTo", fields: [assignedToId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owners       UwOwner[]
+  documents    UwDocument[]
+  bankAnalyses UwBankAnalysis[]
+  vendorPulls  UwVendorPull[]
+  decisions    UwDecision[]
+
+  @@index([status])
+  @@index([paperGrade])
+  @@index([createdAt])
+  @@map("uw_applications")
+}
+
+model UwOwner {
+  id            String   @id @default(cuid())
+  applicationId String
+  application   UwApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  firstName    String
+  lastName     String
+  ssnEnc       String?
+  dob          DateTime?
+  ownershipPct Decimal  @db.Decimal(5, 2)
+  phone        String?
+  email        String?
+  homeAddress  String?
+  ficoClaim    Int?
+
+  pgConsent   Boolean   @default(false)
+  pgConsentAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([applicationId])
+  @@map("uw_owners")
+}
+
+model UwDocument {
+  id            String   @id @default(cuid())
+  applicationId String
+  application   UwApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  docType        UwDocType
+  s3Key          String
+  filename       String
+  contentType    String
+  sizeBytes      Int
+  statementMonth Int?
+  statementYear  Int?
+
+  uploadedById String?
+  uploadedBy   User?    @relation("UwDocUploader", fields: [uploadedById], references: [id])
+  uploadedAt   DateTime @default(now())
+
+  @@index([applicationId])
+  @@index([docType])
+  @@map("uw_documents")
+}
+
+model UwBankAnalysis {
+  id            String   @id @default(cuid())
+  applicationId String
+  application   UwApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  source      String
+  periodStart DateTime
+  periodEnd   DateTime
+  metricsJson Json
+  rawJson     Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([applicationId])
+  @@map("uw_bank_analyses")
+}
+
+model UwVendorPull {
+  id            String   @id @default(cuid())
+  applicationId String
+  application   UwApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  vendor       String
+  status       String
+  resultJson   Json?
+  errorMessage String?
+  cost         Decimal? @db.Decimal(8, 4)
+  pulledAt     DateTime @default(now())
+
+  @@index([applicationId, vendor])
+  @@map("uw_vendor_pulls")
+}
+
+model UwDecision {
+  id            String   @id @default(cuid())
+  applicationId String
+  application   UwApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  decidedById   String
+  decidedBy     User       @relation("UwDecisionMaker", fields: [decidedById], references: [id])
+
+  decision      String
+  paperGrade    PaperGrade
+  notes         String?    @db.Text
+  riskFlagsJson Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([applicationId])
+  @@map("uw_decisions")
 }

@@ -2,10 +2,13 @@ import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 const publicRoutes = ["/login", "/forgot-password"];
-const alwaysPublicRoutes = ["/demo"];
+const alwaysPublicRoutes = ["/demo", "/apply", "/api/apply"];
 const adminRoutes = ["/admin"];
+const uwRoutes = ["/uw"];
+const apiUwRoutes = ["/api/uw"];
 const apiAdminRoutes = ["/api/users", "/api/audit", "/api/email"];
 const mfaExemptRoutes = ["/setup-mfa", "/mfa-verify", "/api/mfa/", "/api/auth/"];
+const UW_ROLES = ["SUPER_SUPER_ADMIN", "SUPER_ADMIN", "ADMIN", "UNDERWRITER"];
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
@@ -65,6 +68,19 @@ export default auth((req) => {
   if (apiAdminRoutes.some((r) => pathname.startsWith(r))) {
     const adminRoles = ["SUPER_SUPER_ADMIN", "SUPER_ADMIN", "ADMIN"];
     if (!adminRoles.includes(user.role)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+  }
+
+  // Underwriting routes — admin or underwriter
+  if (uwRoutes.some((r) => pathname.startsWith(r))) {
+    if (!UW_ROLES.includes(user.role)) {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+  }
+
+  if (apiUwRoutes.some((r) => pathname.startsWith(r))) {
+    if (!UW_ROLES.includes(user.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
   }

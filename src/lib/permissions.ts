@@ -1,5 +1,5 @@
 import { UserRole } from "@prisma/client";
-import { ADMIN_ROLES, INVESTOR_ROLES } from "./constants";
+import { ADMIN_ROLES, INVESTOR_ROLES, UNDERWRITER_ROLES } from "./constants";
 
 export function isAdmin(role: UserRole): boolean {
   return ADMIN_ROLES.includes(role);
@@ -27,6 +27,10 @@ export function canManageUsers(role: UserRole): boolean {
 
 export function canApprovPayouts(role: UserRole): boolean {
   return ADMIN_ROLES.includes(role);
+}
+
+export function canUnderwrite(role: UserRole): boolean {
+  return UNDERWRITER_ROLES.includes(role);
 }
 
 /**
@@ -62,7 +66,7 @@ export function getAuditWhereClause(currentUserRole: UserRole) {
  * Roles available in dropdowns (never show SUPER_SUPER_ADMIN).
  */
 export function getAssignableRoles(currentUserRole: UserRole): UserRole[] {
-  const roles: UserRole[] = [UserRole.SYNDICATE_REP, UserRole.READ_ONLY];
+  const roles: UserRole[] = [UserRole.SYNDICATE_REP, UserRole.READ_ONLY, UserRole.UNDERWRITER];
   if (currentUserRole === UserRole.SUPER_SUPER_ADMIN) {
     roles.push(UserRole.ADMIN, UserRole.SUPER_ADMIN);
   } else if (currentUserRole === UserRole.SUPER_ADMIN) {

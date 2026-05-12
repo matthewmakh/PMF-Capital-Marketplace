@@ -1908,21 +1908,36 @@ export function ScenePricingEngine({ active }: { active: boolean }) {
 // ================================================================
 export function SceneStateDisclosure({ active }: { active: boolean }) {
   const [stamp, setStamp] = useState(false);
+  const [pillsRevealed, setPillsRevealed] = useState(0);
+  const [matched, setMatched] = useState(false);
+
   useEffect(() => {
     if (!active) {
       setStamp(false);
+      setPillsRevealed(0);
+      setMatched(false);
       return;
     }
-    const t = setTimeout(() => setStamp(true), 3800);
-    return () => clearTimeout(t);
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    for (let i = 0; i < 5; i++) {
+      timers.push(
+        setTimeout(
+          () => setPillsRevealed((r) => Math.max(r, i + 1)),
+          500 + i * 220
+        )
+      );
+    }
+    timers.push(setTimeout(() => setMatched(true), 2200));
+    timers.push(setTimeout(() => setStamp(true), 4200));
+    return () => timers.forEach(clearTimeout);
   }, [active]);
 
-  const regulated = [
-    { code: "CA", name: "California", law: "SB 1235", x: 12, y: 56 },
-    { code: "NY", name: "New York", law: "CFDL", x: 84, y: 38 },
-    { code: "UT", name: "Utah", law: "CFR", x: 28, y: 50 },
-    { code: "VA", name: "Virginia", law: "SBF", x: 79, y: 52 },
-    { code: "CT", name: "Connecticut", law: "CFD", x: 88, y: 36 },
+  const states = [
+    { code: "CA", name: "California", law: "SB 1235 · APR required" },
+    { code: "NY", name: "New York", law: "CFDL §801 · APR required", merchant: true },
+    { code: "UT", name: "Utah", law: "Commercial Financing Reg" },
+    { code: "VA", name: "Virginia", law: "Sales-Based Financing Act" },
+    { code: "CT", name: "Connecticut", law: "Commercial Financing Disc" },
   ];
 
   return (
@@ -1936,63 +1951,80 @@ export function SceneStateDisclosure({ active }: { active: boolean }) {
         </h2>
       </FadeIn>
 
-      <div className="grid sm:grid-cols-[1fr_1fr] gap-4">
-        {/* Animated map area */}
+      <div className="grid sm:grid-cols-[1fr_1.1fr] gap-4">
+        {/* Left: regulated-states list */}
         <SlideIn show={active} delay={300} direction="left">
           <div className="rounded-xl bg-navy-900/80 border border-navy-700/50 overflow-hidden">
             <div className="bg-navy-800/50 px-4 py-2.5 border-b border-navy-700/30 flex items-center gap-2">
-              <Network className="h-4 w-4 text-navy-300" />
+              <Scale className="h-4 w-4 text-navy-300" />
               <p className="text-sm font-semibold text-white">
-                Regulated states
+                Regulated states detected
               </p>
             </div>
-            <div className="relative px-4 py-4 h-56 bg-gradient-to-br from-navy-900 to-navy-950">
-              {/* simplified continental outline (stylized blob) */}
-              <svg
-                viewBox="0 0 100 70"
-                className="absolute inset-0 w-full h-full opacity-60"
-              >
-                <path
-                  d="M5 25 Q 15 12, 35 14 Q 55 8, 75 14 Q 92 16, 95 35 Q 92 52, 80 60 Q 60 65, 40 60 Q 20 58, 8 50 Q 2 40, 5 25 Z"
-                  fill="none"
-                  stroke="#273f63"
-                  strokeWidth="0.4"
-                />
-              </svg>
-              {regulated.map((s, i) => (
-                <FadeIn key={s.code} show={active} delay={600 + i * 350}>
+            <div className="px-4 py-3 space-y-1.5">
+              {states.map((s, i) => {
+                const visible = i < pillsRevealed;
+                return (
                   <div
-                    className="absolute -translate-x-1/2 -translate-y-1/2"
-                    style={{ left: `${s.x}%`, top: `${s.y}%` }}
+                    key={s.code}
+                    className={`rounded-lg border px-3 py-2 flex items-center justify-between transition-all duration-500 ${
+                      visible
+                        ? "opacity-100 translate-y-0"
+                        : "opacity-0 -translate-y-1"
+                    } ${
+                      s.merchant && matched
+                        ? "bg-warning/15 border-warning/40 shadow-lg shadow-warning/10"
+                        : "bg-navy-800/40 border-navy-700/40"
+                    }`}
                   >
-                    <div className="relative flex items-center justify-center">
-                      <div className="absolute h-5 w-5 rounded-full bg-warning/30 animate-pulse" />
-                      <div className="relative h-2.5 w-2.5 rounded-full bg-warning ring-2 ring-warning/40" />
-                    </div>
-                    <div className="absolute left-1/2 -translate-x-1/2 mt-1 whitespace-nowrap">
-                      <span className="rounded bg-navy-800/90 border border-warning/30 px-1.5 py-0.5 text-[9px] font-bold text-warning">
-                        {s.code} · {s.law}
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span
+                        className={`flex h-7 w-9 items-center justify-center rounded text-xs font-bold tabular-nums shrink-0 ${
+                          s.merchant && matched
+                            ? "bg-warning/20 text-warning"
+                            : "bg-navy-700/60 text-navy-200"
+                        }`}
+                      >
+                        {s.code}
                       </span>
+                      <div className="min-w-0">
+                        <p
+                          className={`text-xs font-semibold ${
+                            s.merchant && matched ? "text-white" : "text-navy-200"
+                          }`}
+                        >
+                          {s.name}
+                        </p>
+                        <p className="text-[10px] text-navy-500 truncate">
+                          {s.law}
+                        </p>
+                      </div>
                     </div>
+                    {s.merchant && matched && (
+                      <span className="rounded-full bg-warning/20 px-2 py-0.5 text-[10px] font-bold text-warning uppercase shrink-0 ml-2">
+                        Merchant
+                      </span>
+                    )}
                   </div>
-                </FadeIn>
-              ))}
-
-              <FadeIn show={active} delay={2600}>
-                <div className="absolute bottom-2 left-2 right-2 rounded-md bg-navy-800/70 border border-navy-700/40 px-2 py-1.5 flex items-center gap-2">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-profit shrink-0" />
-                  <p className="text-[10px] text-navy-200">
-                    Merchant state{" "}
-                    <span className="font-bold text-white">NY</span> matched —
-                    NY Commercial Financial Disclosure Law applies
-                  </p>
-                </div>
-              </FadeIn>
+                );
+              })}
+            </div>
+            <div
+              className={`border-t border-profit/30 bg-profit/10 px-4 py-2.5 flex items-center gap-2 transition-opacity duration-500 ${
+                matched ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              <CheckCircle2 className="h-3.5 w-3.5 text-profit shrink-0" />
+              <p className="text-[11px] text-profit">
+                Merchant state{" "}
+                <span className="font-bold">NY</span> matched — NY CFDL §801
+                applies
+              </p>
             </div>
           </div>
         </SlideIn>
 
-        {/* Generated disclosure PDF */}
+        {/* Right: generated disclosure PDF */}
         <SlideIn show={active} delay={500} direction="right">
           <div className="rounded-xl bg-white shadow-2xl shadow-navy-950 overflow-hidden">
             <div className="bg-navy-800 px-4 py-2 flex items-center justify-between">
@@ -2004,28 +2036,23 @@ export function SceneStateDisclosure({ active }: { active: boolean }) {
               </div>
               <span className="text-[10px] text-navy-500">Auto-generated</span>
             </div>
-            <div className="relative p-4 bg-white text-navy-900 text-[10px] leading-relaxed">
-              <p className="text-center font-bold text-navy-900 text-xs mb-2">
+            <div className="p-4 bg-white text-navy-900 text-[10px] leading-relaxed">
+              <p className="text-center font-bold text-navy-900 text-xs mb-1">
                 COMMERCIAL FINANCING DISCLOSURE
               </p>
               <p className="text-center text-[9px] text-steel-600 mb-3 uppercase tracking-wider">
                 State of New York · CFDL §801
               </p>
-              <div className="space-y-1 text-[10px]">
+              <div className="space-y-0.5">
                 {[
                   { l: "Amount financed", v: "$35,000.00", d: 1400 },
-                  { l: "Total disbursed to recipient", v: "$35,000.00", d: 1600 },
-                  { l: "Finance charge", v: "$14,700.00", d: 1800 },
-                  { l: "Total payback", v: "$49,700.00", d: 2000 },
-                  { l: "Estimated term", v: "5 months (≈109 ACH debits)", d: 2200 },
-                  {
-                    l: "APR-equivalent",
-                    v: "94.2%",
-                    d: 2400,
-                    bold: true,
-                  },
-                  { l: "Avg daily payment", v: "$365.00", d: 2600 },
-                  { l: "Prepayment", v: "No discount", d: 2800 },
+                  { l: "Total disbursed to recipient", v: "$35,000.00", d: 1550 },
+                  { l: "Finance charge", v: "$14,700.00", d: 1700 },
+                  { l: "Total payback", v: "$49,700.00", d: 1850 },
+                  { l: "Estimated term", v: "5 mo (≈109 ACH debits)", d: 2000 },
+                  { l: "APR-equivalent", v: "94.2%", d: 2150, bold: true },
+                  { l: "Avg daily payment", v: "$365.00", d: 2300 },
+                  { l: "Prepayment", v: "No discount", d: 2450 },
                 ].map((row, i) => (
                   <FadeIn key={i} show={active} delay={row.d}>
                     <div className="flex justify-between border-b border-steel-100 py-0.5">
@@ -2040,20 +2067,31 @@ export function SceneStateDisclosure({ active }: { active: boolean }) {
                 ))}
               </div>
 
-              {/* Stamp */}
-              <div
-                className={`absolute right-3 bottom-3 rotate-[-12deg] transition-all duration-700 ${
-                  stamp
-                    ? "opacity-100 scale-100"
-                    : "opacity-0 scale-150 pointer-events-none"
-                }`}
-              >
-                <div className="rounded-md border-2 border-profit px-3 py-1.5 bg-profit/5">
-                  <div className="flex items-center gap-1">
-                    <Stamp className="h-3 w-3 text-profit" />
-                    <p className="text-[9px] font-bold text-profit uppercase tracking-wider">
-                      NY CFDL · OK
-                    </p>
+              {/* Footer with stamp in its own space */}
+              <div className="mt-4 pt-3 border-t border-steel-200 flex items-end justify-between gap-3">
+                <div className="text-[9px] text-steel-600 leading-relaxed">
+                  <p className="uppercase tracking-wider text-steel-500 text-[8px]">
+                    Disclosure provided to
+                  </p>
+                  <p className="mt-0.5 font-medium text-navy-800">
+                    Carlos Reyes
+                  </p>
+                  <p className="text-steel-600">Sunrise Auto Body LLC</p>
+                </div>
+                <div
+                  className={`rotate-[-8deg] transition-all duration-700 ${
+                    stamp
+                      ? "opacity-100 scale-100"
+                      : "opacity-0 scale-150 pointer-events-none"
+                  }`}
+                >
+                  <div className="rounded-md border-2 border-profit px-3 py-1.5 bg-profit/5">
+                    <div className="flex items-center gap-1">
+                      <Stamp className="h-3 w-3 text-profit" />
+                      <p className="text-[9px] font-bold text-profit uppercase tracking-wider">
+                        NY CFDL · OK
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2062,7 +2100,7 @@ export function SceneStateDisclosure({ active }: { active: boolean }) {
         </SlideIn>
       </div>
 
-      <FadeIn show={active} delay={4400}>
+      <FadeIn show={active} delay={4800}>
         <p className="text-sm text-navy-400 text-center mt-4">
           CA SB 1235 · NY CFDL · UT · VA · CT — generated on every offer.
         </p>

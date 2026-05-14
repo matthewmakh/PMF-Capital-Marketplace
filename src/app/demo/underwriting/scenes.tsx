@@ -39,8 +39,55 @@ import {
   BarChart3,
   Users,
   Search,
-  ArrowDown,
 } from "lucide-react";
+
+// ================================================================
+// SHARED — small visual helpers (used across multiple scenes)
+// ================================================================
+
+function LiveIndicator({ label = "Live" }: { label?: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-profit/30 bg-profit/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-profit">
+      <span className="relative flex h-1.5 w-1.5">
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-profit opacity-75" />
+        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-profit" />
+      </span>
+      {label}
+    </span>
+  );
+}
+
+function MiniSparkline({
+  data,
+  color = "#4169a5",
+  className = "",
+  height = 20,
+}: {
+  data: number[];
+  color?: string;
+  className?: string;
+  height?: number;
+}) {
+  const max = Math.max(...data, 1);
+  return (
+    <div
+      className={`flex items-end gap-0.5 ${className}`}
+      style={{ height }}
+    >
+      {data.map((v, i) => (
+        <div
+          key={i}
+          className="flex-1 rounded-[1px]"
+          style={{
+            height: `${Math.max(8, (v / max) * 100)}%`,
+            backgroundColor: color,
+            opacity: 0.35 + (i / data.length) * 0.55,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
 
 // ================================================================
 // SCENE 1 — HERO (vendor constellation + live operations tickers)
@@ -532,12 +579,13 @@ const PORTAL_FILES: Array<{
   size: string;
   docType: string;
   docTypeColor: DocTypeColor;
+  confidence: number;
 }> = [
-  { name: "ChaseStatement_2026-01.pdf", size: "284 KB", docType: "Bank Statement", docTypeColor: "navy" },
-  { name: "ChaseStatement_2025-12.pdf", size: "291 KB", docType: "Bank Statement", docTypeColor: "navy" },
-  { name: "ChaseStatement_2025-11.pdf", size: "276 KB", docType: "Bank Statement", docTypeColor: "navy" },
-  { name: "Drivers_License.jpg", size: "412 KB", docType: "ID — Driver's License", docTypeColor: "warning" },
-  { name: "Voided_Check.pdf", size: "98 KB", docType: "Voided Check", docTypeColor: "profit" },
+  { name: "ChaseStatement_2026-01.pdf", size: "284 KB", docType: "Bank Statement", docTypeColor: "navy", confidence: 98 },
+  { name: "ChaseStatement_2025-12.pdf", size: "291 KB", docType: "Bank Statement", docTypeColor: "navy", confidence: 99 },
+  { name: "ChaseStatement_2025-11.pdf", size: "276 KB", docType: "Bank Statement", docTypeColor: "navy", confidence: 97 },
+  { name: "Drivers_License.jpg", size: "412 KB", docType: "ID — Driver's License", docTypeColor: "warning", confidence: 94 },
+  { name: "Voided_Check.pdf", size: "98 KB", docType: "Voided Check", docTypeColor: "profit", confidence: 96 },
 ];
 
 function fileLifecycle(idx: number, stage: number): "hidden" | "uploading" | "detecting" | "classified" {
@@ -663,12 +711,17 @@ export function ScenePortalUpload({ active }: { active: boolean }) {
                             </>
                           )}
                           {state === "classified" && (
-                            <span
-                              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-all duration-500 ${badgeClass}`}
-                            >
-                              <Check className="h-2.5 w-2.5" />
-                              {f.docType}
-                            </span>
+                            <>
+                              <span
+                                className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider transition-all duration-500 ${badgeClass}`}
+                              >
+                                <Check className="h-2.5 w-2.5" />
+                                {f.docType}
+                              </span>
+                              <span className="text-[10px] font-mono font-semibold text-navy-400 tabular-nums">
+                                {f.confidence}%
+                              </span>
+                            </>
                           )}
                         </div>
                       </li>
@@ -833,16 +886,24 @@ export function SceneTamperDetection({ active }: { active: boolean }) {
             <div className="px-5 py-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-navy-400">Risk score</span>
-                <span
-                  className={`text-2xl font-bold tabular-nums transition-colors duration-700 ${
-                    score >= 60
-                      ? "text-danger"
-                      : score >= 25
-                        ? "text-warning"
-                        : "text-profit"
-                  }`}
-                >
-                  {score}
+                <span className="relative">
+                  {/* Glow halo, only when score is in TAMPERED zone */}
+                  <span
+                    className={`absolute inset-0 -m-2 rounded-full blur-xl transition-opacity duration-500 ${
+                      score >= 60 ? "bg-danger/30 opacity-100" : "opacity-0"
+                    }`}
+                  />
+                  <span
+                    className={`relative inline-block text-2xl font-bold tabular-nums transition-all duration-700 ${
+                      score >= 60
+                        ? "text-danger scale-110"
+                        : score >= 25
+                          ? "text-warning"
+                          : "text-profit"
+                    }`}
+                  >
+                    {score}
+                  </span>
                 </span>
               </div>
               <div className="h-2 rounded-full bg-navy-800 overflow-hidden">
@@ -962,10 +1023,33 @@ export function SceneStatementAnalytics({ active }: { active: boolean }) {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
         {[
-          { label: "Gross deposits", value: 142_800, prefix: "$", delay: 400 },
-          { label: "True revenue", value: 118_400, prefix: "$", delay: 600 },
-          { label: "Avg daily balance", value: 9_200, prefix: "$", delay: 800 },
-          { label: "MCA debit / deposit", value: 28, suffix: "%", delay: 1000, danger: true },
+          {
+            label: "Gross deposits",
+            value: 142_800,
+            prefix: "$",
+            delay: 400,
+            spark: [38, 42, 46, 45, 48, 51, 47, 49] as number[],
+          },
+          {
+            label: "True revenue",
+            value: 118_400,
+            prefix: "$",
+            delay: 600,
+            spark: [45, 43, 41, 39, 41, 38, 36, 33] as number[], // declining trend
+          },
+          {
+            label: "Avg daily balance",
+            value: 9_200,
+            prefix: "$",
+            delay: 800,
+          },
+          {
+            label: "MCA debit / deposit",
+            value: 28,
+            suffix: "%",
+            delay: 1000,
+            danger: true,
+          },
         ].map((stat, i) => (
           <SlideIn key={i} show={active} delay={stat.delay}>
             <div className="rounded-xl bg-navy-900/80 border border-navy-700/50 p-3">
@@ -985,6 +1069,14 @@ export function SceneStatementAnalytics({ active }: { active: boolean }) {
                   delay={stat.delay + 200}
                 />
               </p>
+              {stat.spark && (
+                <MiniSparkline
+                  data={stat.spark}
+                  color={stat.label === "True revenue" ? "#d97706" : "#4169a5"}
+                  className="mt-2"
+                  height={14}
+                />
+              )}
             </div>
           </SlideIn>
         ))}
@@ -1145,15 +1237,15 @@ function Row({
 // ================================================================
 export function SceneVendorPulls({ active }: { active: boolean }) {
   const [progress, setProgress] = useState<Record<string, number>>({});
+  const [elapsedMs, setElapsedMs] = useState(0);
 
   useEffect(() => {
     if (!active) {
       setProgress({});
+      setElapsedMs(0);
       return;
     }
     const vendors = ["consumer", "business", "ofac", "datamerch", "ucc", "kyb"];
-    const finalProgress: Record<string, number> = {};
-    vendors.forEach((v) => (finalProgress[v] = 100));
     const timers: ReturnType<typeof setTimeout>[] = [];
     vendors.forEach((v, i) => {
       timers.push(
@@ -1162,7 +1254,24 @@ export function SceneVendorPulls({ active }: { active: boolean }) {
         }, 1500 + i * 700)
       );
     });
-    return () => timers.forEach(clearTimeout);
+
+    // Elapsed clock — starts at scene entry, freezes once all vendors complete
+    const clockStart = Date.now();
+    const finalMs = 1500 + 5 * 700 + 600; // last vendor + small tail
+    const tick = setInterval(() => {
+      const e = Date.now() - clockStart;
+      if (e >= finalMs) {
+        setElapsedMs(finalMs);
+        clearInterval(tick);
+      } else {
+        setElapsedMs(e);
+      }
+    }, 50);
+
+    return () => {
+      timers.forEach(clearTimeout);
+      clearInterval(tick);
+    };
   }, [active]);
 
   const vendors = [
@@ -1212,15 +1321,36 @@ export function SceneVendorPulls({ active }: { active: boolean }) {
 
   const completed = Object.values(progress).filter((v) => v === 100).length;
 
+  const elapsedSec = (elapsedMs / 1000).toFixed(1);
+  const allDone = completed === 6 && elapsedMs > 0;
+
   return (
     <div className="px-6 sm:px-10 py-8 max-w-5xl mx-auto">
       <FadeIn show={active} delay={0}>
-        <p className="text-xs uppercase tracking-widest text-navy-400 mb-1">
-          Third-Party Data
-        </p>
-        <h2 className="text-2xl font-bold text-white mb-6">
-          6 vendors. Parallel. 8 seconds.
-        </h2>
+        <div className="flex items-end justify-between mb-6">
+          <div>
+            <p className="text-xs uppercase tracking-widest text-navy-400 mb-1">
+              Third-Party Data
+            </p>
+            <h2 className="text-2xl font-bold text-white">
+              6 vendors. Parallel.
+            </h2>
+          </div>
+          {/* Live elapsed clock */}
+          <div className="text-right">
+            <p className="text-[10px] uppercase tracking-widest text-navy-500">
+              Elapsed
+            </p>
+            <p
+              className={`mt-0.5 text-3xl font-bold tabular-nums leading-none transition-colors duration-500 ${
+                allDone ? "text-profit" : "text-white"
+              }`}
+            >
+              {elapsedSec}
+              <span className="text-base text-navy-400 font-medium ml-1">s</span>
+            </p>
+          </div>
+        </div>
       </FadeIn>
 
       <div className="grid sm:grid-cols-2 gap-3 mb-4">
@@ -1333,11 +1463,32 @@ export function SceneUnderwritingSummary({ active }: { active: boolean }) {
           </div>
           <div className="text-right">
             <p className="text-[10px] uppercase text-navy-500">Paper grade</p>
-            <span
-              className={`mt-1 inline-flex h-12 w-12 items-center justify-center rounded-xl text-2xl font-bold transition-all duration-500 ${gradeStyle}`}
-            >
-              {grade === "UNGRADED" ? "?" : grade}
+            <span className="relative mt-1 inline-block">
+              {/* Glow halo behind grade — fades up once the grade resolves */}
+              <span
+                className={`absolute inset-0 -m-2 rounded-2xl blur-xl transition-opacity duration-700 ${
+                  grade === "UNGRADED" ? "opacity-0" : "opacity-80"
+                } ${
+                  grade === "A"
+                    ? "bg-profit/40"
+                    : grade === "B"
+                      ? "bg-navy-500/40"
+                      : grade === "C"
+                        ? "bg-warning/40"
+                        : grade === "D"
+                          ? "bg-danger/40"
+                          : ""
+                }`}
+              />
+              <span
+                className={`relative inline-flex h-12 w-12 items-center justify-center rounded-xl text-2xl font-bold transition-all duration-500 ${gradeStyle}`}
+              >
+                {grade === "UNGRADED" ? "?" : grade}
+              </span>
             </span>
+            <p className="mt-1 text-[9px] uppercase tracking-wider text-navy-500 font-mono">
+              8 sources · 14 signals
+            </p>
           </div>
         </div>
       </FadeIn>
@@ -1527,9 +1678,12 @@ export function SceneDecision({ active }: { active: boolean }) {
             <div className="bg-navy-800/50 px-4 py-2.5 border-b border-navy-700/30 flex items-center gap-2">
               <Workflow className="h-4 w-4 text-navy-300" />
               <p className="text-sm font-semibold text-white">Audit Trail</p>
-              <span className="ml-auto text-[10px] text-navy-500">
-                Immutable · GLBA-ready
-              </span>
+              <div className="ml-auto flex items-center gap-2">
+                <LiveIndicator />
+                <span className="text-[10px] text-navy-500">
+                  Immutable · GLBA-ready
+                </span>
+              </div>
             </div>
             <ul className="px-5 py-3 space-y-2 text-xs font-mono">
               {[
@@ -1614,7 +1768,50 @@ export function SceneDecision({ active }: { active: boolean }) {
 // ================================================================
 export function SceneClosing({ active }: { active: boolean }) {
   return (
-    <div className="flex flex-col items-center justify-center h-full text-center px-6">
+    <div className="relative flex flex-col items-center justify-center h-full text-center px-6 overflow-hidden">
+      {/* Faded constellation bookend — visual callback to the hero */}
+      <div
+        className="absolute inset-0 pointer-events-none flex items-center justify-center transition-opacity duration-1000"
+        style={{ opacity: active ? 0.15 : 0 }}
+      >
+        <div className="relative w-full max-w-2xl mx-auto" style={{ aspectRatio: "8 / 5" }}>
+          <svg
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            className="absolute inset-0 w-full h-full"
+          >
+            {HERO_NODES.map((n, i) => (
+              <line
+                key={`closing-line-${i}`}
+                x1={n.x}
+                y1={n.y}
+                x2={50}
+                y2={50}
+                stroke="#4169a5"
+                strokeWidth="0.25"
+                strokeOpacity="0.5"
+              />
+            ))}
+            {HERO_NODES.map((n, i) => (
+              <circle key={`pulse-c-${i}`} r="0.8" fill="#8da5c9">
+                <animate attributeName="cx" from={n.x} to={50} dur="3.4s" begin={`${i * 0.45}s`} repeatCount="indefinite" />
+                <animate attributeName="cy" from={n.y} to={50} dur="3.4s" begin={`${i * 0.45}s`} repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.2;0.8;1" dur="3.4s" begin={`${i * 0.45}s`} repeatCount="indefinite" />
+              </circle>
+            ))}
+          </svg>
+        </div>
+      </div>
+      {/* Vignette so the foreground content stays legible */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse 50% 50% at center, rgba(6,10,16,0.85) 0%, rgba(6,10,16,0.65) 60%, rgba(6,10,16,0.95) 100%)",
+        }}
+      />
+
+      <div className="relative z-10 flex flex-col items-center">
       <FadeIn show={active} delay={200}>
         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-profit/15 border border-profit/30 mb-6 mx-auto">
           <Sparkles className="h-8 w-8 text-profit" />
@@ -1678,6 +1875,7 @@ export function SceneClosing({ active }: { active: boolean }) {
           PMF Capital · MCA Underwriting Platform
         </p>
       </FadeIn>
+      </div>
     </div>
   );
 }
@@ -1938,9 +2136,12 @@ export function ScenePipelineDashboard({ active }: { active: boolean }) {
                 Active Applications
               </p>
             </div>
-            <span className="text-[11px] text-navy-500">
-              Sorted by recency
-            </span>
+            <div className="flex items-center gap-2">
+              <LiveIndicator />
+              <span className="text-[11px] text-navy-500">
+                Sorted by recency
+              </span>
+            </div>
           </div>
           <div className="overflow-hidden">
             <table className="w-full text-xs">
@@ -2126,19 +2327,23 @@ export function ScenePricingEngine({ active }: { active: boolean }) {
           const visible = tier > i;
           const toneClass =
             o.tone === "profit"
-              ? "border-profit/40 bg-profit/5"
+              ? "border-profit/50 bg-profit/5 shadow-xl shadow-profit/15 ring-1 ring-profit/30"
               : o.tone === "warning"
                 ? "border-warning/40 bg-warning/5"
                 : "border-navy-700/50 bg-navy-900/80";
           return (
             <div
               key={i}
-              className={`rounded-xl border overflow-hidden transition-all duration-700 ${toneClass} ${
+              className={`relative rounded-xl border overflow-hidden transition-all duration-700 ${toneClass} ${
                 visible
                   ? "opacity-100 translate-y-0"
                   : "opacity-0 translate-y-4 pointer-events-none"
-              }`}
+              } ${o.highlight ? "scale-[1.03] z-10" : ""}`}
             >
+              {/* Recommended-card outer glow halo */}
+              {o.highlight && visible && (
+                <div className="absolute -inset-3 rounded-2xl bg-profit/25 blur-2xl -z-10 pointer-events-none" />
+              )}
               <div className="px-4 py-2.5 border-b border-navy-700/30 flex items-center justify-between">
                 <p className="text-xs font-bold text-white uppercase tracking-wider">
                   {o.label}
@@ -2519,12 +2724,17 @@ export function ScenePortfolioIntelligence({ active }: { active: boolean }) {
   return (
     <div className="px-6 sm:px-10 py-6 max-w-5xl mx-auto">
       <FadeIn show={active} delay={0}>
-        <p className="text-xs uppercase tracking-widest text-navy-400 mb-1">
-          Portfolio Intelligence
-        </p>
-        <h2 className="text-2xl font-bold text-white mb-4">
-          Run your shop — not the spreadsheets
-        </h2>
+        <div className="flex items-end justify-between mb-4">
+          <div>
+            <p className="text-xs uppercase tracking-widest text-navy-400 mb-1">
+              Portfolio Intelligence
+            </p>
+            <h2 className="text-2xl font-bold text-white">
+              Run your shop — not the spreadsheets
+            </h2>
+          </div>
+          <LiveIndicator />
+        </div>
       </FadeIn>
 
       {/* KPI strip */}
@@ -2535,6 +2745,8 @@ export function ScenePortfolioIntelligence({ active }: { active: boolean }) {
             value: 4_200_000,
             prefix: "$",
             delay: 200,
+            spark: [2.1, 2.4, 2.8, 3.1, 3.0, 3.4, 3.7, 3.9, 3.6, 4.0, 4.1, 4.2] as number[],
+            sparkColor: "#16a34a",
           },
           {
             label: "Portfolio default rate",
@@ -2542,6 +2754,8 @@ export function ScenePortfolioIntelligence({ active }: { active: boolean }) {
             suffix: ".4%",
             delay: 350,
             tone: "warn",
+            spark: [9.8, 9.2, 9.0, 8.7, 8.6, 8.4] as number[],
+            sparkColor: "#d97706",
           },
           {
             label: "Fraud caught (90d)",
@@ -2579,6 +2793,14 @@ export function ScenePortfolioIntelligence({ active }: { active: boolean }) {
                   delay={s.delay + 200}
                 />
               </p>
+              {s.spark && (
+                <MiniSparkline
+                  data={s.spark}
+                  color={s.sparkColor || "#4169a5"}
+                  className="mt-2"
+                  height={14}
+                />
+              )}
             </div>
           </SlideIn>
         ))}
@@ -2892,6 +3114,7 @@ export function SceneAnomalyCatch({ active }: { active: boolean }) {
               <table className="w-full text-xs">
                 <thead className="text-[10px] text-navy-500 uppercase tracking-wider">
                   <tr>
+                    <th className="w-4"></th>
                     <th className="text-left px-2 py-1.5">Date</th>
                     <th className="text-left px-2 py-1.5">Legal</th>
                     <th className="text-left px-2 py-1.5 hidden sm:table-cell">
@@ -2909,6 +3132,28 @@ export function SceneAnomalyCatch({ active }: { active: boolean }) {
                         i < rowsRevealed ? "opacity-100" : "opacity-0"
                       } ${i === 0 ? "bg-danger/10" : ""}`}
                     >
+                      {/* Connecting-thread cell — vertical line + dot */}
+                      <td className="relative w-4 align-middle">
+                        {/* Vertical line — top half except for first row, bottom half except for last */}
+                        {i > 0 && (
+                          <span
+                            className="absolute left-1/2 top-0 h-1/2 w-px -translate-x-1/2 bg-danger/40"
+                          />
+                        )}
+                        {i < applications.length - 1 && (
+                          <span
+                            className="absolute left-1/2 bottom-0 h-1/2 w-px -translate-x-1/2 bg-danger/40"
+                          />
+                        )}
+                        {/* Dot */}
+                        <span
+                          className={`relative block h-2 w-2 mx-auto rounded-full ${
+                            i === 0
+                              ? "bg-danger ring-2 ring-danger/30"
+                              : "bg-danger/60"
+                          }`}
+                        />
+                      </td>
                       <td className="px-2 py-1.5 text-navy-300 tabular-nums">
                         {a.when}
                       </td>
@@ -3079,42 +3324,73 @@ export function SceneDataMerch({ active }: { active: boolean }) {
       </div>
 
       <div className="grid sm:grid-cols-[1fr_1.4fr] gap-4">
-        {/* Left: how-it-works flow */}
+        {/* Left: how-it-works flow with animated pulses */}
         <SlideIn show={active} delay={900} direction="left">
           <div className="rounded-xl bg-navy-900/80 border border-navy-700/50 overflow-hidden h-full">
             <div className="bg-navy-800/50 px-4 py-2.5 border-b border-navy-700/30 flex items-center gap-2">
               <Database className="h-4 w-4 text-navy-300" />
               <p className="text-sm font-semibold text-white">How it works</p>
             </div>
-            <div className="px-4 py-4 flex flex-col items-center gap-2">
-              <div className="rounded-lg bg-navy-800/40 border border-navy-700/40 px-4 py-2.5 text-center w-full">
-                <p className="text-[10px] uppercase tracking-wider text-navy-500">
-                  180+ funders
-                </p>
-                <p className="text-sm font-semibold text-navy-100 mt-0.5">
-                  Report bad actors
-                </p>
-              </div>
-              <ArrowDown className="h-4 w-4 text-navy-500" />
-              <div className="rounded-lg bg-navy-700/50 border border-navy-500/40 px-4 py-2.5 text-center w-full">
-                <p className="text-[10px] uppercase tracking-wider text-navy-300">
-                  DataMerch registry
-                </p>
-                <p className="text-sm font-bold text-white mt-0.5">
-                  Shared · EIN-keyed
-                </p>
-              </div>
-              <ArrowDown className="h-4 w-4 text-navy-500" />
-              <div className="rounded-lg bg-profit/10 border border-profit/40 px-4 py-2.5 text-center w-full">
-                <p className="text-[10px] uppercase tracking-wider text-profit/80">
-                  Your platform
-                </p>
-                <p className="text-sm font-bold text-white mt-0.5">
-                  Queries every deal
-                </p>
-                <p className="text-[10px] text-profit mt-0.5">
-                  Auto-contributes back on funding
-                </p>
+            <div className="relative px-4 py-4">
+              {/* Animated connector overlay: down-pulses (data in) + up-pulses (contribute back) */}
+              <svg
+                viewBox="0 0 10 100"
+                preserveAspectRatio="none"
+                className="absolute left-0 top-0 h-full"
+                style={{ width: 24, left: "50%", marginLeft: -12, pointerEvents: "none" }}
+              >
+                {/* Vertical guide line */}
+                <line
+                  x1="5" y1="22" x2="5" y2="78"
+                  stroke="#273f63" strokeWidth="0.3" strokeOpacity="0.5"
+                />
+                {/* Downward pulses (funders → registry → platform) */}
+                <circle r="0.9" fill="#8da5c9">
+                  <animate attributeName="cy" from="22" to="48" dur="1.8s" begin="0s" repeatCount="indefinite" />
+                  <animate attributeName="cx" values="5;5" dur="1.8s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.85;1" dur="1.8s" repeatCount="indefinite" />
+                </circle>
+                <circle r="0.9" fill="#8da5c9">
+                  <animate attributeName="cy" from="52" to="78" dur="1.8s" begin="0.9s" repeatCount="indefinite" />
+                  <animate attributeName="cx" values="5;5" dur="1.8s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.85;1" dur="1.8s" begin="0.9s" repeatCount="indefinite" />
+                </circle>
+                {/* Upward pulse (platform → registry: contribute back) — slower, green */}
+                <circle r="0.7" fill="#16a34a">
+                  <animate attributeName="cy" from="78" to="52" dur="3.4s" begin="1.5s" repeatCount="indefinite" />
+                  <animate attributeName="cx" values="7;7" dur="3.4s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.85;1" dur="3.4s" begin="1.5s" repeatCount="indefinite" />
+                </circle>
+              </svg>
+
+              <div className="flex flex-col items-stretch gap-3 relative">
+                <div className="rounded-lg bg-navy-800/40 border border-navy-700/40 px-4 py-2.5 text-center">
+                  <p className="text-[10px] uppercase tracking-wider text-navy-500">
+                    180+ funders
+                  </p>
+                  <p className="text-sm font-semibold text-navy-100 mt-0.5">
+                    Report bad actors
+                  </p>
+                </div>
+                <div className="rounded-lg bg-navy-700/50 border border-navy-500/40 px-4 py-2.5 text-center">
+                  <p className="text-[10px] uppercase tracking-wider text-navy-300">
+                    DataMerch registry
+                  </p>
+                  <p className="text-sm font-bold text-white mt-0.5">
+                    Shared · EIN-keyed
+                  </p>
+                </div>
+                <div className="rounded-lg bg-profit/10 border border-profit/40 px-4 py-2.5 text-center">
+                  <p className="text-[10px] uppercase tracking-wider text-profit/80">
+                    Your platform
+                  </p>
+                  <p className="text-sm font-bold text-white mt-0.5">
+                    Queries every deal
+                  </p>
+                  <p className="text-[10px] text-profit mt-0.5">
+                    Auto-contributes back on funding
+                  </p>
+                </div>
               </div>
             </div>
           </div>

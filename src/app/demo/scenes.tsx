@@ -135,7 +135,7 @@ export function SceneHero({ active }: { active: boolean }) {
           <FadeIn show={active} delay={0}>
             <div className="flex flex-col items-center">
               <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-navy-500 to-navy-700 flex items-center justify-center shadow-2xl shadow-navy-500/30 border border-navy-400/20">
-                <span className="text-xl font-bold text-white">PMF</span>
+                <CircleDollarSign className="h-9 w-9 text-white" />
               </div>
               <div className="mt-2.5 text-center">
                 <p className="text-[10px] uppercase tracking-widest text-navy-500">Total Distributed</p>
@@ -763,20 +763,17 @@ export function SceneClosing({ active }: { active: boolean }) {
     <div className="flex flex-col items-center justify-center h-full text-center px-6">
       <FadeIn show={active} delay={200}>
         <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-navy-600 mb-8 mx-auto">
-          <span className="text-2xl font-bold text-white">PMF</span>
+          <CircleDollarSign className="h-9 w-9 text-white" />
         </div>
       </FadeIn>
-      <FadeIn show={active} delay={500}>
-        <p className="text-sm uppercase tracking-widest text-navy-400 mb-3">Prepared Exclusively For</p>
-      </FadeIn>
       <FadeIn show={active} delay={800}>
-        <h2 className="text-3xl sm:text-5xl font-bold text-white mb-2">Premier Merchant Funding</h2>
+        <h2 className="text-3xl sm:text-5xl font-bold text-white mb-2">Capital Marketplace</h2>
       </FadeIn>
       <FadeIn show={active} delay={1100}>
         <div className="h-px w-24 bg-navy-600 mx-auto my-4" />
       </FadeIn>
       <FadeIn show={active} delay={1300}>
-        <p className="text-lg text-navy-300 mb-8 max-w-lg">Your private syndication platform — built to transform deal flow into structured investment opportunities.</p>
+        <p className="text-lg text-navy-300 mb-8 max-w-lg">A private syndication platform that transforms deal flow into structured investment opportunities.</p>
       </FadeIn>
       <FadeIn show={active} delay={1700}>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">

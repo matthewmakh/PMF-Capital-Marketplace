@@ -9,32 +9,169 @@ import {
 } from "lucide-react";
 
 // ================================================================
-// SCENE 1: HERO
+// SCENE 1: HERO — CAPITAL FLOW CONSTELLATION
 // ================================================================
+const MERCHANTS = [
+  { name: "Metro Quick Mart", daily: "$375/day", x: 15, y: 8 },
+  { name: "Bella's Kitchen", daily: "$280/day", x: 50, y: 3 },
+  { name: "Greenfield Medical", daily: "$450/day", x: 85, y: 8 },
+];
+const INVESTORS = [
+  { name: "Michael Torres", earned: "+$12,400", initials: "MT", x: 15, y: 78 },
+  { name: "Jessica Park", earned: "+$8,200", initials: "JP", x: 50, y: 83 },
+  { name: "David Kim", earned: "+$6,100", initials: "DK", x: 85, y: 78 },
+];
+const HUB = { x: 50, y: 42 };
+
 export function SceneHero({ active }: { active: boolean }) {
   return (
-    <div className="flex flex-col items-center justify-center h-full text-center px-6">
-      <FadeIn show={active} delay={200}>
-        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-navy-600 mb-8 mx-auto">
-          <span className="text-2xl font-bold text-white">PMF</span>
-        </div>
-      </FadeIn>
-      <FadeIn show={active} delay={600}>
-        <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">Capital Marketplace</h1>
-      </FadeIn>
-      <FadeIn show={active} delay={1000}>
-        <p className="text-xl text-navy-200 mb-3">Internal Syndication & Portfolio Management Platform</p>
-      </FadeIn>
-      <FadeIn show={active} delay={1400}>
-        <p className="text-base text-navy-300/70 max-w-lg">Transform incoming MCA deal flow into structured investment opportunities for your office.</p>
-      </FadeIn>
-      <FadeIn show={active} delay={2000}>
-        <div className="mt-10 flex gap-4 text-sm text-navy-400">
-          {["Deal Intake", "Syndication", "Payment Tracking", "Portfolio Management"].map((t, i) => (
-            <span key={i} className="rounded-full border border-navy-700 px-3 py-1">{t}</span>
+    <div className="flex flex-col items-center justify-center h-full px-4 overflow-hidden">
+      {/* Constellation container */}
+      <div className="relative w-full max-w-2xl" style={{ height: "70vh", maxHeight: 520 }}>
+        {/* Inline keyframes for flow dots + pulse rings */}
+        {active && (
+          <style>{`
+            ${MERCHANTS.map((m, i) => `
+              @keyframes flow-m${i} {
+                0% { left: ${m.x}%; top: ${m.y + 5}%; opacity: 0; }
+                12% { opacity: 1; }
+                88% { opacity: 1; }
+                100% { left: ${HUB.x}%; top: ${HUB.y - 2}%; opacity: 0; }
+              }
+            `).join("")}
+            ${INVESTORS.map((inv, i) => `
+              @keyframes flow-i${i} {
+                0% { left: ${HUB.x}%; top: ${HUB.y + 5}%; opacity: 0; }
+                12% { opacity: 1; }
+                88% { opacity: 1; }
+                100% { left: ${inv.x}%; top: ${inv.y - 2}%; opacity: 0; }
+              }
+            `).join("")}
+            @keyframes pulse-ring {
+              0% { transform: translate(-50%, -50%) scale(1); opacity: 0.25; }
+              100% { transform: translate(-50%, -50%) scale(3.5); opacity: 0; }
+            }
+          `}</style>
+        )}
+
+        {/* SVG connection lines */}
+        <svg
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          style={{ opacity: active ? 1 : 0, transition: "opacity 1.2s ease-out 0.5s" }}
+        >
+          {MERCHANTS.map((m, i) => (
+            <line key={`ml-${i}`} x1={m.x} y1={m.y + 5} x2={HUB.x} y2={HUB.y - 2} stroke="rgba(71,85,105,0.25)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
           ))}
+          {INVESTORS.map((inv, i) => (
+            <line key={`il-${i}`} x1={HUB.x} y1={HUB.y + 5} x2={inv.x} y2={inv.y - 2} stroke="rgba(71,85,105,0.25)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+          ))}
+        </svg>
+
+        {/* Pulse rings behind hub */}
+        {active &&
+          [0, 1, 2].map((i) => (
+            <div
+              key={`ring-${i}`}
+              className="absolute w-20 h-20 rounded-full border border-navy-500/25 pointer-events-none"
+              style={{
+                left: `${HUB.x}%`,
+                top: `${HUB.y}%`,
+                animation: `pulse-ring 3.5s ${i * 1.2}s ease-out infinite`,
+              }}
+            />
+          ))}
+
+        {/* Flow dots: merchants → hub (green) */}
+        {active &&
+          MERCHANTS.flatMap((_, i) =>
+            [0, 1, 2].map((d) => (
+              <div
+                key={`md-${i}-${d}`}
+                className="absolute w-1.5 h-1.5 rounded-full bg-emerald-400 pointer-events-none"
+                style={{
+                  boxShadow: "0 0 6px rgba(52,211,153,0.8)",
+                  animation: `flow-m${i} 2.8s ${1000 + i * 200 + d * 900}ms ease-in-out infinite`,
+                  transform: "translate(-50%, -50%)",
+                }}
+              />
+            ))
+          )}
+
+        {/* Flow dots: hub → investors (blue) */}
+        {active &&
+          INVESTORS.flatMap((_, i) =>
+            [0, 1, 2].map((d) => (
+              <div
+                key={`id-${i}-${d}`}
+                className="absolute w-1.5 h-1.5 rounded-full bg-sky-400 pointer-events-none"
+                style={{
+                  boxShadow: "0 0 6px rgba(56,189,248,0.8)",
+                  animation: `flow-i${i} 2.8s ${1800 + i * 200 + d * 900}ms ease-in-out infinite`,
+                  transform: "translate(-50%, -50%)",
+                }}
+              />
+            ))
+          )}
+
+        {/* Merchant nodes */}
+        {MERCHANTS.map((m, i) => (
+          <div key={`m-${i}`} className="absolute" style={{ left: `${m.x}%`, top: `${m.y}%`, transform: "translate(-50%, -50%)" }}>
+            <FadeIn show={active} delay={300 + i * 200}>
+              <div className="flex flex-col items-center">
+                <div className="h-10 w-10 rounded-full bg-navy-800/80 border border-navy-600/40 flex items-center justify-center backdrop-blur-sm">
+                  <Briefcase className="h-4 w-4 text-navy-400" />
+                </div>
+                <p className="text-[10px] text-navy-400 mt-1.5 text-center whitespace-nowrap">{m.name}</p>
+                <p className="text-[10px] text-emerald-400/80 font-semibold hidden sm:block">{m.daily}</p>
+              </div>
+            </FadeIn>
+          </div>
+        ))}
+
+        {/* Central hub */}
+        <div className="absolute" style={{ left: `${HUB.x}%`, top: `${HUB.y}%`, transform: "translate(-50%, -50%)" }}>
+          <FadeIn show={active} delay={0}>
+            <div className="flex flex-col items-center">
+              <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-navy-500 to-navy-700 flex items-center justify-center shadow-2xl shadow-navy-500/30 border border-navy-400/20">
+                <span className="text-xl font-bold text-white">PMF</span>
+              </div>
+              <div className="mt-2.5 text-center">
+                <p className="text-[10px] uppercase tracking-widest text-navy-500">Total Distributed</p>
+                <p className="text-lg font-bold text-white tabular-nums">
+                  $<CountUp end={2400000} show={active} delay={800} />
+                </p>
+              </div>
+            </div>
+          </FadeIn>
         </div>
-      </FadeIn>
+
+        {/* Investor nodes */}
+        {INVESTORS.map((inv, i) => (
+          <div key={`i-${i}`} className="absolute" style={{ left: `${inv.x}%`, top: `${inv.y}%`, transform: "translate(-50%, -50%)" }}>
+            <FadeIn show={active} delay={1200 + i * 200}>
+              <div className="flex flex-col items-center">
+                <div className="h-10 w-10 rounded-full bg-navy-800/80 border border-navy-600/40 flex items-center justify-center backdrop-blur-sm">
+                  <span className="text-xs font-bold text-navy-300">{inv.initials}</span>
+                </div>
+                <p className="text-[10px] text-navy-400 mt-1.5 text-center whitespace-nowrap">{inv.name}</p>
+                <p className="text-[10px] text-sky-400/80 font-semibold hidden sm:block">{inv.earned}</p>
+              </div>
+            </FadeIn>
+          </div>
+        ))}
+      </div>
+
+      {/* Title section */}
+      <div className="text-center -mt-6">
+        <FadeIn show={active} delay={2200}>
+          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">Capital Marketplace</h1>
+        </FadeIn>
+        <FadeIn show={active} delay={2600}>
+          <p className="text-base text-navy-300/70 max-w-lg mx-auto">Internal Syndication & Portfolio Management Platform</p>
+        </FadeIn>
+      </div>
     </div>
   );
 }

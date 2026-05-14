@@ -12,16 +12,16 @@ import {
 // SCENE 1: HERO — CAPITAL FLOW CONSTELLATION
 // ================================================================
 const MERCHANTS = [
-  { name: "Metro Quick Mart", daily: "$375/day", x: 15, y: 8 },
-  { name: "Bella's Kitchen", daily: "$280/day", x: 50, y: 3 },
-  { name: "Greenfield Medical", daily: "$450/day", x: 85, y: 8 },
+  { name: "Metro Quick Mart", daily: "$375/day", x: 15, y: 12 },
+  { name: "Bella's Kitchen", daily: "$280/day", x: 50, y: 7 },
+  { name: "Greenfield Medical", daily: "$450/day", x: 85, y: 12 },
 ];
 const INVESTORS = [
-  { name: "Michael Torres", earned: "+$12,400", initials: "MT", x: 15, y: 78 },
-  { name: "Jessica Park", earned: "+$8,200", initials: "JP", x: 50, y: 83 },
-  { name: "David Kim", earned: "+$6,100", initials: "DK", x: 85, y: 78 },
+  { name: "Michael Torres", earned: "+$12,400", initials: "MT", x: 15, y: 72 },
+  { name: "Jessica Park", earned: "+$8,200", initials: "JP", x: 50, y: 77 },
+  { name: "David Kim", earned: "+$6,100", initials: "DK", x: 85, y: 72 },
 ];
-const HUB = { x: 50, y: 42 };
+const HUB = { x: 50, y: 40 };
 
 export function SceneHero({ active }: { active: boolean }) {
   return (
@@ -89,7 +89,7 @@ export function SceneHero({ active }: { active: boolean }) {
             [0, 1, 2].map((d) => (
               <div
                 key={`md-${i}-${d}`}
-                className="absolute w-1.5 h-1.5 rounded-full bg-emerald-400 pointer-events-none"
+                className="absolute w-1.5 h-1.5 rounded-full bg-emerald-400 pointer-events-none opacity-0"
                 style={{
                   boxShadow: "0 0 6px rgba(52,211,153,0.8)",
                   animation: `flow-m${i} 2.8s ${1000 + i * 200 + d * 900}ms ease-in-out infinite`,
@@ -105,7 +105,7 @@ export function SceneHero({ active }: { active: boolean }) {
             [0, 1, 2].map((d) => (
               <div
                 key={`id-${i}-${d}`}
-                className="absolute w-1.5 h-1.5 rounded-full bg-sky-400 pointer-events-none"
+                className="absolute w-1.5 h-1.5 rounded-full bg-sky-400 pointer-events-none opacity-0"
                 style={{
                   boxShadow: "0 0 6px rgba(56,189,248,0.8)",
                   animation: `flow-i${i} 2.8s ${1800 + i * 200 + d * 900}ms ease-in-out infinite`,

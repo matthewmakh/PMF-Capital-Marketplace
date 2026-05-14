@@ -43,53 +43,261 @@ import {
 } from "lucide-react";
 
 // ================================================================
-// SCENE 1 — HERO
+// SCENE 1 — HERO (vendor constellation + live operations tickers)
 // ================================================================
-export function SceneHero({ active }: { active: boolean }) {
+
+const HERO_NODES: Array<{ label: string; x: number; y: number }> = [
+  { label: "Plaid", x: 50, y: 8 },
+  { label: "Azure DI", x: 84, y: 25 },
+  { label: "Microbilt", x: 92, y: 58 },
+  { label: "Middesk", x: 68, y: 88 },
+  { label: "iLien", x: 32, y: 88 },
+  { label: "DataMerch", x: 8, y: 58 },
+  { label: "Inscribe", x: 16, y: 25 },
+];
+
+const HERO_TICKER_DEALS =
+  "APPROVED $35K · Sunrise Auto Body LLC · C-paper · 14:22:48   ⬩   DataMerch HIT · Coastal Marine LLC · 3 entries · DECLINED   ⬩   Tamper score 88 · Statement_Nov2025.pdf · BLOCKED   ⬩   OFAC clear · Carlos Reyes   ⬩   3 MCA positions detected · OnDeck · Forward · Kapitus   ⬩   UCC search · 3 active filings   ⬩   ";
+
+const HERO_TICKER_VENDORS =
+  "Plaid linked · Chase Business · 4 months pulled   ⬩   Azure DI · 856 transactions extracted   ⬩   FICO 612 · Experian soft pull · 1.2s   ⬩   Middesk KYB · Active NY since 2019   ⬩   Inscribe · risk 12 · CLEAN   ⬩   Business credit 54 · Moderate   ⬩   ";
+
+const HERO_TICKER_PORTFOLIO =
+  "MTD funded $4.2M · 47 apps · 12 in intake · 8 under review · loss avoided $580K · default rate 8.4% · fraud caught 11 · paper grades A 2% / B 6% / C 12% / D 28%   ⬩   ";
+
+function HeroTicker({
+  text,
+  className,
+  direction,
+  speed,
+  visible,
+  baseOpacity,
+}: {
+  text: string;
+  className: string;
+  direction: "left" | "right";
+  speed: number;
+  visible: boolean;
+  baseOpacity: number;
+}) {
   return (
-    <div className="flex flex-col items-center justify-center h-full text-center px-6">
-      <FadeIn show={active} delay={200}>
-        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-navy-600 mb-8 mx-auto">
-          <ShieldCheck className="h-9 w-9 text-white" />
-        </div>
-      </FadeIn>
-      <FadeIn show={active} delay={600}>
-        <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">
-          MCA Underwriting
-        </h1>
-      </FadeIn>
-      <FadeIn show={active} delay={1000}>
-        <p className="text-xl text-navy-200 mb-3">
-          From merchant submission to funding decision — automated
-        </p>
-      </FadeIn>
-      <FadeIn show={active} delay={1400}>
-        <p className="text-base text-navy-300/70 max-w-xl">
-          Document intake. Bank statement analytics. Tamper detection. Credit,
-          OFAC, UCC, KYB pulls. All in one platform — under 90 seconds per
-          deal.
-        </p>
-      </FadeIn>
-      <FadeIn show={active} delay={2000}>
-        <div className="mt-10 flex flex-wrap justify-center gap-2 max-w-xl">
-          {[
-            "Plaid",
-            "Azure Document Intelligence",
-            "Microbilt",
-            "DataMerch",
-            "Inscribe",
-            "Wolters Kluwer iLien",
-            "Middesk",
-          ].map((t, i) => (
-            <span
-              key={i}
-              className="rounded-full border border-navy-700 px-3 py-1 text-xs text-navy-400"
+    <div
+      className={`absolute left-0 right-0 overflow-hidden pointer-events-none ${className}`}
+      style={{
+        opacity: visible ? baseOpacity : 0,
+        transition: "opacity 1600ms ease-out",
+      }}
+    >
+      <div
+        className="whitespace-nowrap font-mono text-[11px] text-navy-200 tracking-wide"
+        style={{
+          width: "200%",
+          animation: `ticker-${direction} ${speed}s linear infinite`,
+        }}
+      >
+        <span>{text}</span>
+        <span>{text}</span>
+      </div>
+    </div>
+  );
+}
+
+export function SceneHero({ active }: { active: boolean }) {
+  const [phase, setPhase] = useState(0);
+
+  useEffect(() => {
+    if (!active) {
+      setPhase(0);
+      return;
+    }
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    timers.push(setTimeout(() => setPhase(1), 200)); // tickers fade in
+    timers.push(setTimeout(() => setPhase(2), 500)); // hub
+    for (let i = 0; i < HERO_NODES.length; i++) {
+      timers.push(setTimeout(() => setPhase((p) => Math.max(p, 3 + i)), 850 + i * 220));
+    }
+    timers.push(setTimeout(() => setPhase((p) => Math.max(p, 10)), 2500)); // title
+    timers.push(setTimeout(() => setPhase((p) => Math.max(p, 11)), 2900)); // subtitle
+    return () => timers.forEach(clearTimeout);
+  }, [active]);
+
+  const tickersVisible = phase >= 1;
+  const hubVisible = phase >= 2;
+  const nodesVisible = Math.max(0, phase - 2); // 0..7
+  const titleVisible = phase >= 10;
+  const subtitleVisible = phase >= 11;
+
+  return (
+    <div className="relative h-full w-full overflow-hidden">
+      {/* Background tickers */}
+      <HeroTicker
+        text={HERO_TICKER_DEALS}
+        className="top-[10%]"
+        direction="left"
+        speed={55}
+        visible={tickersVisible}
+        baseOpacity={0.18}
+      />
+      <HeroTicker
+        text={HERO_TICKER_VENDORS}
+        className="top-[50%]"
+        direction="right"
+        speed={68}
+        visible={tickersVisible}
+        baseOpacity={0.1}
+      />
+      <HeroTicker
+        text={HERO_TICKER_PORTFOLIO}
+        className="bottom-[8%]"
+        direction="left"
+        speed={75}
+        visible={tickersVisible}
+        baseOpacity={0.14}
+      />
+
+      {/* Radial vignette so tickers fade toward edges and constellation pops */}
+      <div
+        className="absolute inset-0 pointer-events-none z-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 70% 55% at center, rgba(6,10,16,0) 0%, rgba(6,10,16,0.55) 55%, rgba(6,10,16,0.92) 100%)",
+        }}
+      />
+
+      {/* Foreground content */}
+      <div className="relative z-10 flex h-full flex-col items-center justify-center px-6">
+        {/* Constellation */}
+        <div className="relative w-full max-w-2xl mx-auto" style={{ aspectRatio: "8 / 5" }}>
+          {/* SVG: connecting lines + travelling pulse dots */}
+          <svg
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            className="absolute inset-0 w-full h-full"
+          >
+            {HERO_NODES.map((n, i) => {
+              const drawn = nodesVisible > i;
+              return (
+                <line
+                  key={`line-${i}`}
+                  x1={n.x}
+                  y1={n.y}
+                  x2={50}
+                  y2={50}
+                  stroke="#4169a5"
+                  strokeWidth="0.3"
+                  strokeOpacity="0.5"
+                  strokeDasharray="100"
+                  strokeDashoffset={drawn ? 0 : 100}
+                  style={{
+                    transition: "stroke-dashoffset 700ms ease-out",
+                  }}
+                />
+              );
+            })}
+
+            {HERO_NODES.map((n, i) => {
+              if (nodesVisible <= i) return null;
+              return (
+                <circle key={`pulse-${i}`} r="0.9" fill="#8da5c9">
+                  <animate
+                    attributeName="cx"
+                    from={n.x}
+                    to={50}
+                    dur="2.8s"
+                    begin={`${i * 0.35}s`}
+                    repeatCount="indefinite"
+                  />
+                  <animate
+                    attributeName="cy"
+                    from={n.y}
+                    to={50}
+                    dur="2.8s"
+                    begin={`${i * 0.35}s`}
+                    repeatCount="indefinite"
+                  />
+                  <animate
+                    attributeName="opacity"
+                    values="0;1;1;0"
+                    keyTimes="0;0.2;0.8;1"
+                    dur="2.8s"
+                    begin={`${i * 0.35}s`}
+                    repeatCount="indefinite"
+                  />
+                </circle>
+              );
+            })}
+          </svg>
+
+          {/* Vendor node labels */}
+          {HERO_NODES.map((n, i) => (
+            <div
+              key={n.label}
+              className="absolute transition-all duration-500"
+              style={{
+                left: `${n.x}%`,
+                top: `${n.y}%`,
+                transform: "translate(-50%, -50%)",
+                opacity: nodesVisible > i ? 1 : 0,
+                scale: nodesVisible > i ? "1" : "0.85",
+              }}
             >
-              {t}
-            </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-navy-500/40 bg-navy-900/85 px-2.5 py-1 text-[11px] font-semibold text-navy-100 whitespace-nowrap backdrop-blur-sm shadow-lg shadow-navy-950/60">
+                <span className="h-1.5 w-1.5 rounded-full bg-navy-300 shadow-[0_0_6px_rgba(141,165,201,0.8)]" />
+                {n.label}
+              </span>
+            </div>
           ))}
+
+          {/* Hub */}
+          <div
+            className="absolute z-10 transition-all duration-700 ease-out"
+            style={{
+              left: "50%",
+              top: "50%",
+              transform: `translate(-50%, -50%) scale(${hubVisible ? 1 : 0.7})`,
+              opacity: hubVisible ? 1 : 0,
+            }}
+          >
+            <div className="relative">
+              {/* Outer glow */}
+              <div className="absolute -inset-6 rounded-full bg-navy-400/20 blur-2xl" />
+              {/* Pulsing mid ring */}
+              <div className="absolute -inset-2 rounded-2xl bg-navy-500/30 blur-lg animate-pulse" />
+              {/* Solid hub */}
+              <div className="relative flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br from-navy-500 to-navy-700 ring-2 ring-navy-300/50 shadow-xl shadow-navy-500/25">
+                <ShieldCheck className="h-10 w-10 text-white" />
+              </div>
+            </div>
+          </div>
         </div>
-      </FadeIn>
+
+        {/* Title block */}
+        <div
+          className="mt-8 text-center transition-all duration-700"
+          style={{
+            opacity: titleVisible ? 1 : 0,
+            transform: titleVisible ? "translateY(0)" : "translateY(12px)",
+          }}
+        >
+          <h1 className="text-4xl sm:text-5xl font-bold text-white">
+            MCA Underwriting
+          </h1>
+        </div>
+        <div
+          className="mt-3 text-center transition-all duration-700"
+          style={{
+            opacity: subtitleVisible ? 1 : 0,
+            transform: subtitleVisible ? "translateY(0)" : "translateY(10px)",
+          }}
+        >
+          <p className="text-lg text-navy-200">
+            From merchant submission to funding decision — automated
+          </p>
+          <p className="mt-1.5 text-xs uppercase tracking-widest text-navy-400">
+            One platform · Seven integrations · 90 seconds per file
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

@@ -92,3 +92,13 @@ body {
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
+
+/* Demo hero ticker scrolls. Content is duplicated; -50% loops seamlessly. */
+@keyframes ticker-left {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
+}
+@keyframes ticker-right {
+  from { transform: translate3d(-50%, 0, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}

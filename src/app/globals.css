@@ -102,3 +102,13 @@ body {
   from { transform: translate3d(-50%, 0, 0); }
   to { transform: translate3d(0, 0, 0); }
 }
+
+/* Demo hero scan rings around the hub */
+@keyframes ring-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes ring-rotate-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}

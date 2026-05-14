@@ -46,14 +46,20 @@ import {
 // SCENE 1 — HERO (vendor constellation + live operations tickers)
 // ================================================================
 
-const HERO_NODES: Array<{ label: string; x: number; y: number }> = [
-  { label: "Plaid", x: 50, y: 8 },
-  { label: "Azure DI", x: 84, y: 25 },
-  { label: "Microbilt", x: 92, y: 58 },
-  { label: "Middesk", x: 68, y: 88 },
-  { label: "iLien", x: 32, y: 88 },
-  { label: "DataMerch", x: 8, y: 58 },
-  { label: "Inscribe", x: 16, y: 25 },
+const HERO_NODES: Array<{ label: string; metric: string; x: number; y: number }> = [
+  { label: "Plaid",      metric: "856 txns",     x: 50, y: 8 },
+  { label: "Azure DI",   metric: "3 statements", x: 84, y: 25 },
+  { label: "Microbilt",  metric: "FICO 612",     x: 92, y: 58 },
+  { label: "Middesk",    metric: "Active 2019",  x: 68, y: 88 },
+  { label: "iLien",      metric: "3 UCC",        x: 32, y: 88 },
+  { label: "DataMerch",  metric: "0 hits",       x: 8,  y: 58 },
+  { label: "Inscribe",   metric: "Risk 12",      x: 16, y: 25 },
+];
+
+const HERO_OUTPUT: Array<{ label: string; value: string; tone: "warning" | "neutral" }> = [
+  { label: "GRADE",  value: "C",      tone: "warning" },
+  { label: "FACTOR", value: "1.42×",  tone: "neutral" },
+  { label: "APR",    value: "94.2%",  tone: "neutral" },
 ];
 
 const HERO_TICKER_DEALS =
@@ -118,6 +124,9 @@ export function SceneHero({ active }: { active: boolean }) {
     }
     timers.push(setTimeout(() => setPhase((p) => Math.max(p, 10)), 2500)); // title
     timers.push(setTimeout(() => setPhase((p) => Math.max(p, 11)), 2900)); // subtitle
+    timers.push(setTimeout(() => setPhase((p) => Math.max(p, 12)), 3300)); // output 1
+    timers.push(setTimeout(() => setPhase((p) => Math.max(p, 13)), 3550)); // output 2
+    timers.push(setTimeout(() => setPhase((p) => Math.max(p, 14)), 3800)); // output 3
     return () => timers.forEach(clearTimeout);
   }, [active]);
 
@@ -126,6 +135,7 @@ export function SceneHero({ active }: { active: boolean }) {
   const nodesVisible = Math.max(0, phase - 2); // 0..7
   const titleVisible = phase >= 10;
   const subtitleVisible = phase >= 11;
+  const outputRevealed = Math.max(0, phase - 11); // 0..3
 
   return (
     <div className="relative h-full w-full overflow-hidden">
@@ -228,7 +238,7 @@ export function SceneHero({ active }: { active: boolean }) {
             })}
           </svg>
 
-          {/* Vendor node labels */}
+          {/* Vendor node labels — name + live metric */}
           {HERO_NODES.map((n, i) => (
             <div
               key={n.label}
@@ -241,12 +251,57 @@ export function SceneHero({ active }: { active: boolean }) {
                 scale: nodesVisible > i ? "1" : "0.85",
               }}
             >
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-navy-500/40 bg-navy-900/85 px-2.5 py-1 text-[11px] font-semibold text-navy-100 whitespace-nowrap backdrop-blur-sm shadow-lg shadow-navy-950/60">
-                <span className="h-1.5 w-1.5 rounded-full bg-navy-300 shadow-[0_0_6px_rgba(141,165,201,0.8)]" />
-                {n.label}
-              </span>
+              <div className="inline-flex flex-col items-start gap-0.5 rounded-lg border border-navy-500/40 bg-navy-900/85 px-2.5 py-1 whitespace-nowrap backdrop-blur-sm shadow-lg shadow-navy-950/60">
+                <span className="flex items-center gap-1.5 text-[11px] font-semibold text-navy-100">
+                  <span className="h-1.5 w-1.5 rounded-full bg-navy-300 shadow-[0_0_6px_rgba(141,165,201,0.8)]" />
+                  {n.label}
+                </span>
+                <span className="pl-3 text-[9px] font-mono uppercase tracking-wide text-navy-400">
+                  {n.metric}
+                </span>
+              </div>
             </div>
           ))}
+
+          {/* Scan rings around the hub */}
+          <div
+            className="absolute z-[5] pointer-events-none transition-opacity duration-1000"
+            style={{
+              left: "50%",
+              top: "50%",
+              transform: "translate(-50%, -50%)",
+              opacity: hubVisible ? 1 : 0,
+            }}
+          >
+            <div
+              style={{
+                width: 200,
+                height: 200,
+                borderRadius: "50%",
+                border: "1px dashed rgba(65, 105, 165, 0.32)",
+                animation: "ring-rotate 30s linear infinite",
+              }}
+            />
+          </div>
+          <div
+            className="absolute z-[5] pointer-events-none transition-opacity duration-1000"
+            style={{
+              left: "50%",
+              top: "50%",
+              transform: "translate(-50%, -50%)",
+              opacity: hubVisible ? 1 : 0,
+            }}
+          >
+            <div
+              style={{
+                width: 140,
+                height: 140,
+                borderRadius: "50%",
+                border: "1px dashed rgba(103, 135, 183, 0.42)",
+                animation: "ring-rotate-reverse 18s linear infinite",
+              }}
+            />
+          </div>
 
           {/* Hub */}
           <div
@@ -267,6 +322,54 @@ export function SceneHero({ active }: { active: boolean }) {
               <div className="relative flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br from-navy-500 to-navy-700 ring-2 ring-navy-300/50 shadow-xl shadow-navy-500/25">
                 <ShieldCheck className="h-10 w-10 text-white" />
               </div>
+            </div>
+          </div>
+
+          {/* Output badges — the computation's result */}
+          <div
+            className="absolute z-20"
+            style={{
+              left: "50%",
+              top: "72%",
+              transform: "translate(-50%, -50%)",
+            }}
+          >
+            <div className="flex items-center gap-2">
+              {HERO_OUTPUT.map((b, i) => {
+                const visible = outputRevealed > i;
+                const isWarn = b.tone === "warning";
+                return (
+                  <div
+                    key={b.label}
+                    className={`rounded-lg border px-3 py-1.5 backdrop-blur-md transition-all duration-500 ${
+                      isWarn
+                        ? "border-warning/50 bg-warning/15 shadow-lg shadow-warning/10"
+                        : "border-navy-400/40 bg-navy-900/85 shadow-lg shadow-navy-950/60"
+                    }`}
+                    style={{
+                      opacity: visible ? 1 : 0,
+                      transform: visible
+                        ? "translateY(0) scale(1)"
+                        : "translateY(8px) scale(0.92)",
+                    }}
+                  >
+                    <p
+                      className={`text-[8px] uppercase tracking-[0.18em] font-semibold ${
+                        isWarn ? "text-warning/85" : "text-navy-400"
+                      }`}
+                    >
+                      {b.label}
+                    </p>
+                    <p
+                      className={`text-sm font-bold tabular-nums leading-tight ${
+                        isWarn ? "text-warning" : "text-white"
+                      }`}
+                    >
+                      {b.value}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

@@ -23,7 +23,7 @@ import { Play, Pause, ChevronLeft, ChevronRight, ArrowLeftRight } from "lucide-r
 import Link from "next/link";
 
 const SCENES = [
-  { component: SceneHero, label: "Intro", caption: "", duration: 5000 },
+  { component: SceneHero, label: "Intro", caption: "", duration: 8000 },
   {
     component: SceneProblem,
     label: "The Problem",

@@ -1,6 +1,10 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+
+// CountUp now lives in shared components (reduced-motion aware, reusable across
+// the app). Re-exported here so demo scenes keep importing it from "./animations".
+export { CountUp } from "@/components/shared/count-up";
 
 export function FadeIn({
   children,
@@ -75,49 +79,6 @@ export function SlideIn({
       {children}
     </div>
   );
-}
-
-export function CountUp({
-  end,
-  prefix = "",
-  suffix = "",
-  duration = 2000,
-  delay = 0,
-  show = true,
-  className,
-}: {
-  end: number;
-  prefix?: string;
-  suffix?: string;
-  duration?: number;
-  delay?: number;
-  show?: boolean;
-  className?: string;
-}) {
-  const [value, setValue] = useState(0);
-  const ref = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (!show) { setValue(0); return; }
-    const startTime = Date.now() + delay;
-    const animate = () => {
-      const now = Date.now();
-      if (now < startTime) { ref.current = requestAnimationFrame(animate); return; }
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setValue(Math.round(end * eased));
-      if (progress < 1) ref.current = requestAnimationFrame(animate);
-    };
-    ref.current = requestAnimationFrame(animate);
-    return () => { if (ref.current) cancelAnimationFrame(ref.current); };
-  }, [end, duration, delay, show]);
-
-  const formatted = end >= 1000
-    ? `${prefix}${value.toLocaleString()}${suffix}`
-    : `${prefix}${value}${suffix}`;
-
-  return <span className={cn("tabular-nums", className)}>{formatted}</span>;
 }
 
 export function ProgressFill({

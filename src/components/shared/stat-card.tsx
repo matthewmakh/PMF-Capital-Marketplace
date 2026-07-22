@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { type LucideIcon } from "lucide-react";
+import { CountUp } from "@/components/shared/count-up";
 
 interface StatCardProps {
   title: string;
@@ -9,6 +10,11 @@ interface StatCardProps {
   icon?: LucideIcon;
   trend?: "up" | "down" | "neutral";
   className?: string;
+  /** Animate the value counting up on first mount. Requires numericValue. */
+  countUp?: boolean;
+  /** Raw number to count up to (formatted via countUpFormat). */
+  numericValue?: number;
+  countUpFormat?: "currency" | "number";
 }
 
 export function StatCard({
@@ -18,7 +24,11 @@ export function StatCard({
   icon: Icon,
   trend,
   className,
+  countUp,
+  numericValue,
+  countUpFormat = "currency",
 }: StatCardProps) {
+  const animate = countUp && numericValue !== undefined;
   return (
     <Card className={cn("", className)}>
       <CardContent className="p-3 sm:p-5">
@@ -34,7 +44,16 @@ export function StatCard({
                 trend === "down" && "text-danger"
               )}
             >
-              {value}
+              {animate ? (
+                <CountUp
+                  end={numericValue ?? 0}
+                  format={countUpFormat}
+                  duration={1000}
+                  once
+                />
+              ) : (
+                value
+              )}
             </p>
             {subtitle && (
               <p className="truncate text-[11px] text-muted-foreground sm:text-xs">

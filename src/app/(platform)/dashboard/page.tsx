@@ -113,6 +113,8 @@ async function AdminDashboard({ userId }: { userId: string }) {
           title="Capital Deployed"
           value={formatCurrency(capitalAmt)}
           icon={DollarSign}
+          countUp
+          numericValue={capitalAmt}
         />
         <StatCard
           title="Total Collected"
@@ -120,17 +122,25 @@ async function AdminDashboard({ userId }: { userId: string }) {
           subtitle={`${formatPercent(collectionRate, 1)} collection rate`}
           icon={TrendingUp}
           trend={collectedAmt > 0 ? "up" : "neutral"}
+          countUp
+          numericValue={collectedAmt}
         />
         <StatCard
           title="Active Deals"
           value={String(activeDeals)}
           subtitle={`${totalDeals} total`}
           icon={Briefcase}
+          countUp
+          numericValue={activeDeals}
+          countUpFormat="number"
         />
         <StatCard
           title="Active Users"
           value={String(totalUsers)}
           icon={Users}
+          countUp
+          numericValue={totalUsers}
+          countUpFormat="number"
         />
       </div>
 
@@ -384,12 +394,14 @@ async function InvestorDashboard({ userId }: { userId: string }) {
       <PageHeader title="Dashboard" description="Your investment overview" />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard title="Total Invested" value={formatCurrency(totalInvested)} icon={DollarSign} />
+        <StatCard title="Total Invested" value={formatCurrency(totalInvested)} icon={DollarSign} countUp numericValue={totalInvested} />
         <StatCard
           title="Total Repaid"
           value={formatCurrency(totalDistributed)}
           icon={TrendingUp}
           trend={totalDistributed > 0 ? "up" : "neutral"}
+          countUp
+          numericValue={totalDistributed}
         />
         <StatCard
           title="Profit Earned"
@@ -397,12 +409,16 @@ async function InvestorDashboard({ userId }: { userId: string }) {
           subtitle={`${roi.toFixed(1)}% ROI`}
           icon={Wallet}
           trend={totalProfit > 0 ? "up" : "neutral"}
+          countUp
+          numericValue={totalProfit}
         />
         <StatCard
           title="Principal Recovered"
           value={formatCurrency(principalReturned)}
           subtitle={`${totalInvested > 0 ? ((principalReturned / totalInvested) * 100).toFixed(1) : 0}% of invested`}
           icon={TrendingUp}
+          countUp
+          numericValue={principalReturned}
         />
       </div>
 
@@ -600,10 +616,10 @@ async function ExecutiveDashboard() {
       <PageHeader title="Executive Dashboard" description="Office performance at a glance" />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard title="Total Deals" value={String(totalDeals)} icon={Briefcase} />
-        <StatCard title="Active Deals" value={String(activeDeals)} subtitle={delinquent > 0 ? `${delinquent} delinquent` : undefined} icon={TrendingUp} />
-        <StatCard title="Capital Deployed" value={formatCurrency(capitalAmt)} icon={DollarSign} />
-        <StatCard title="Total Collected" value={formatCurrency(collectedAmt)} icon={Wallet} trend="up" />
+        <StatCard title="Total Deals" value={String(totalDeals)} icon={Briefcase} countUp numericValue={totalDeals} countUpFormat="number" />
+        <StatCard title="Active Deals" value={String(activeDeals)} subtitle={delinquent > 0 ? `${delinquent} delinquent` : undefined} icon={TrendingUp} countUp numericValue={activeDeals} countUpFormat="number" />
+        <StatCard title="Capital Deployed" value={formatCurrency(capitalAmt)} icon={DollarSign} countUp numericValue={capitalAmt} />
+        <StatCard title="Total Collected" value={formatCurrency(collectedAmt)} icon={Wallet} trend="up" countUp numericValue={collectedAmt} />
       </div>
 
       <div className="mt-6 grid gap-5 lg:grid-cols-2">

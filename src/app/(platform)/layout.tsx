@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { SessionProvider } from "@/components/providers/session-provider";
 import { PlatformShell } from "@/components/layout/platform-shell";
+import { Toaster } from "@/components/ui/sonner";
 
 export default async function PlatformLayout({
   children,
@@ -22,6 +23,7 @@ export default async function PlatformLayout({
       <PlatformShell userName={fullName} userRole={role}>
         {children}
       </PlatformShell>
+      <Toaster />
     </SessionProvider>
   );
 }

@@ -5,10 +5,12 @@ interface ProgressProps extends React.HTMLAttributes<HTMLDivElement> {
   value?: number;
   max?: number;
   indicatorClassName?: string;
+  /** Play a one-shot scaleX fill reveal on mount (not on refetch). */
+  animateOnMount?: boolean;
 }
 
 const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
-  ({ className, value = 0, max = 100, indicatorClassName, ...props }, ref) => {
+  ({ className, value = 0, max = 100, indicatorClassName, animateOnMount, ...props }, ref) => {
     const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
     return (
       <div
@@ -22,6 +24,7 @@ const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
         <div
           className={cn(
             "h-full rounded-full bg-primary transition-all",
+            animateOnMount && "progress-reveal",
             indicatorClassName
           )}
           style={{ width: `${percentage}%` }}

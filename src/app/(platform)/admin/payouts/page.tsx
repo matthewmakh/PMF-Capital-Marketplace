@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,7 +41,14 @@ export default function AdminPayoutsPage() {
       if (res.ok) {
         const updated = await res.json();
         setPayouts((prev) => prev.map((p) => (p.id === payoutId ? { ...p, ...updated } : p)));
+        const label = action === "approve" ? "approved" : action === "deny" ? "denied" : "marked completed";
+        toast.success(`Payout ${label}`);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || "Failed to update payout");
       }
+    } catch {
+      toast.error("Failed to update payout");
     } finally {
       setLoading(null);
     }

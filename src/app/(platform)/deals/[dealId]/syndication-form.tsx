@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +12,7 @@ import { formatCurrency } from "@/lib/utils";
 
 interface SyndicationFormProps {
   dealId: string;
+  dealName: string;
   minAmount: number;
   maxAmount: number;
   remainingCapacity: number;
@@ -17,6 +20,7 @@ interface SyndicationFormProps {
 
 export function SyndicationForm({
   dealId,
+  dealName,
   minAmount,
   maxAmount,
   remainingCapacity,
@@ -51,9 +55,11 @@ export function SyndicationForm({
         throw new Error(data.error || "Failed to syndicate");
       }
 
+      toast.success(`Investment submitted — ${formatCurrency(numAmount)} in ${dealName}`);
+      setAmount("");
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -99,7 +105,14 @@ export function SyndicationForm({
             className="w-full bg-navy-700 hover:bg-navy-800"
             disabled={loading}
           >
-            {loading ? "Processing..." : "Commit Investment"}
+            {loading ? (
+              <>
+                <Loader2 className="animate-spin" />
+                Processing...
+              </>
+            ) : (
+              "Commit Investment"
+            )}
           </Button>
 
           <p className="text-xs text-muted-foreground text-center">

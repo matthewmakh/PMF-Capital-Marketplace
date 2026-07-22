@@ -80,6 +80,11 @@
   --color-chart-5: #d97706;
 }
 
+:root {
+  /* Signature easing — restrained ease-out used across app motion */
+  --ease-signature: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 body {
   background: var(--color-background);
   color: var(--color-foreground);
@@ -91,4 +96,35 @@ body {
 /* Tabular numbers for financial data */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+}
+
+/* One-shot "fill to funded" reveal for progress bars. Uses scaleX (compositor
+   friendly) instead of animating width. Runs once on mount; never on refetch. */
+@keyframes progress-reveal {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.progress-reveal {
+  transform-origin: left center;
+  animation: progress-reveal 500ms var(--ease-signature) both;
+}
+
+/* Reduced-motion foundation — reduce, don't remove. Keep opacity fades
+   meaningful but near-instant, and kill sustained movement and loops. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.12s !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.12s !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
 }

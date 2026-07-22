@@ -126,8 +126,12 @@ export default async function DealsPage() {
               const paybackFormatted = formatCurrency(paybackAmt);
 
               return (
-                <Link key={deal.id} href={`/deals/${deal.id}`}>
-                  <Card className="group h-full border-border/60 transition-all hover:border-navy-300 hover:shadow-lg">
+                <Link
+                  key={deal.id}
+                  href={`/deals/${deal.id}`}
+                  className="group/card block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-navy-400 focus-visible:ring-offset-2"
+                >
+                  <Card className="group h-full border-border/60 transition-all duration-200 ease-[var(--ease-signature)] hover:-translate-y-0.5 hover:border-navy-300 hover:shadow-lg group-focus-visible/card:-translate-y-0.5 group-focus-visible/card:border-navy-300 group-focus-visible/card:shadow-lg">
                     <CardContent className="p-0">
                       {/* Header */}
                       <div className="border-b border-border/40 bg-gradient-to-r from-navy-50/60 to-steel-50/30 px-5 py-4">
@@ -203,6 +207,7 @@ export default async function DealsPage() {
                         </div>
                         <Progress
                           value={percentFilled}
+                          animateOnMount
                           className="h-2 rounded-full"
                           indicatorClassName={
                             percentFilled >= 90

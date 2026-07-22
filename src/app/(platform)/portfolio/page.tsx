@@ -80,10 +80,10 @@ export default async function PortfolioPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 mb-5">
-        <StatCard title="Total Invested" value={formatCurrency(totalInvested.toNumber())} icon={DollarSign} />
-        <StatCard title="Total Distributed" value={formatCurrency(totalDistributed.toNumber())} icon={TrendingUp} trend={totalDistributed.gt(0) ? "up" : "neutral"} />
-        <StatCard title="Profit Earned" value={formatCurrency(totalProfit.toNumber())} subtitle={`${roi.toFixed(1)}% ROI`} icon={PieChart} trend={totalProfit.gt(0) ? "up" : "neutral"} />
-        <StatCard title="Available Balance" value={formatCurrency(availableBalance.toNumber())} subtitle="Available for payout" icon={Wallet} />
+        <StatCard title="Total Invested" value={formatCurrency(totalInvested.toNumber())} icon={DollarSign} countUp numericValue={totalInvested.toNumber()} />
+        <StatCard title="Total Distributed" value={formatCurrency(totalDistributed.toNumber())} icon={TrendingUp} trend={totalDistributed.gt(0) ? "up" : "neutral"} countUp numericValue={totalDistributed.toNumber()} />
+        <StatCard title="Profit Earned" value={formatCurrency(totalProfit.toNumber())} subtitle={`${roi.toFixed(1)}% ROI`} icon={PieChart} trend={totalProfit.gt(0) ? "up" : "neutral"} countUp numericValue={totalProfit.toNumber()} />
+        <StatCard title="Available Balance" value={formatCurrency(availableBalance.toNumber())} subtitle="Available for payout" icon={Wallet} countUp numericValue={availableBalance.toNumber()} />
       </div>
 
       {/* Progress + summary row */}

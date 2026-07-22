@@ -205,6 +205,7 @@ export default async function DealDetailPage({ params }: Props) {
           </div>
           <Progress
             value={percentCollected}
+            animateOnMount
             className="h-3 rounded-full"
             indicatorClassName={
               percentCollected >= 100
@@ -460,6 +461,7 @@ export default async function DealDetailPage({ params }: Props) {
               </div>
               <Progress
                 value={percentFilled}
+                animateOnMount
                 className="h-2.5 rounded-full"
                 indicatorClassName={
                   percentFilled >= 100
@@ -543,6 +545,7 @@ export default async function DealDetailPage({ params }: Props) {
           {showSyndicationForm && (
             <SyndicationForm
               dealId={deal.id}
+              dealName={deal.merchantName}
               minAmount={Number(deal.syndicationMin)}
               maxAmount={
                 deal.syndicationMax
